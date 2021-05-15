@@ -66,7 +66,7 @@
   [file-path]
   (slurp file-path))
 
-(defn club-multiline-str
+(defn club-multiline-passport-str
   [data]
   (loop [v      data
          p      ""
@@ -87,7 +87,7 @@
   (let [input (read-input-file file-path)
         ;_     (print input)
         lines (str/split-lines input)]
-    (club-multiline-str lines)))
+    (club-multiline-passport-str lines)))
 
 (defn field->kv-pair
   [f]
@@ -109,10 +109,10 @@
   (let [p-fields       (set (keys p))
         missing-fields (set/difference mandatory-fields p-fields)
         valid?         (= (count missing-fields) 0)
-        _              (println {:passport         p
-                                 :mandatory-fields mandatory-fields
-                                 :missing-fields   missing-fields
-                                 :valid?           valid?})]
+        #__              #_(println {:passport         p
+                                     :mandatory-fields mandatory-fields
+                                     :missing-fields   missing-fields
+                                     :valid?           valid?})]
     valid?))
 
 (defn validate-passports
@@ -121,9 +121,9 @@
 
 (defn count-valid-passports
   [input-file mandatory-fields]
-  (let [input-data           (input-file->data input-file)
-        passport-details-map (map #(passport-str->passport-map %) input-data)
-        _                    (print passport-details-map)
+  (let [input-data            (input-file->data input-file)
+        passport-details-map  (map #(passport-str->passport-map %) input-data)
+        ;_                    (print passport-details-map)
         valid-passports-count (count (filter true? (validate-passports passport-details-map mandatory-fields)))]
     valid-passports-count))
 
@@ -156,25 +156,25 @@
       result))
   #_=> " a b c -  d"
 
-  (club-multiline-str ["ecl:gry pid:860033327 eyr:2020 hcl:#fffffd"
-                       "byr:1937 iyr:2017 cid:147 hgt:183cm"
-                       ""
-                       "iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884"
-                       "hcl:#cfa07d byr:1929"
-                       ""
-                       "hcl:#ae17e1 iyr:2013"
-                       "eyr:2024"
-                       "ecl:brn pid:760753108 byr:1931"
-                       "hgt:179cm"
-                       ""
-                       "hcl:#cfa07d eyr:2025 pid:166559648"
-                       "iyr:2011 ecl:brn hgt:59in"])
+  (club-multiline-passport-str ["ecl:gry pid:860033327 eyr:2020 hcl:#fffffd"
+                                "byr:1937 iyr:2017 cid:147 hgt:183cm"
+                                ""
+                                "iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884"
+                                "hcl:#cfa07d byr:1929"
+                                ""
+                                "hcl:#ae17e1 iyr:2013"
+                                "eyr:2024"
+                                "ecl:brn pid:760753108 byr:1931"
+                                "hgt:179cm"
+                                ""
+                                "hcl:#cfa07d eyr:2025 pid:166559648"
+                                "iyr:2011 ecl:brn hgt:59in"])
   #_=> [" ecl:gry pid:860033327 eyr:2020 hcl:#fffffd byr:1937 iyr:2017 cid:147 hgt:183cm"
         " iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884 hcl:#cfa07d byr:1929"
         " hcl:#ae17e1 iyr:2013 eyr:2024 ecl:brn pid:760753108 byr:1931 hgt:179cm"
         " hcl:#cfa07d eyr:2025 pid:166559648 iyr:2011 ecl:brn hgt:59in"]
 
-  (club-multiline-str ["a" "" "b" "c" "" "d" "e" "f"])
+  (club-multiline-passport-str ["a" "" "b" "c" "" "d" "e" "f"])
   #_=> [" a" " b c" " d e f"]
 
   (input-file->data "resources/passport_processing_input1.txt")
@@ -200,12 +200,13 @@
 
   (valid-passport? {:ecl "gry", :pid "860033327", :eyr "2020", :hcl "#fffffd", :byr "1937", :iyr "2017", :cid "147", :hgt "183cm"}
                    #{:ecl :pid :eyr :hcl :byr :iyr :hgt})
+  #_=> true
 
   (def passport-details
     '({:ecl "gry", :pid "860033327", :eyr "2020", :hcl "#fffffd", :byr "1937", :iyr "2017", :cid "147", :hgt "183cm"}
-     {:iyr "2013", :ecl "amb", :cid "350", :eyr "2023", :pid "028048884", :hcl "#cfa07d", :byr "1929"}
-     {:hcl "#ae17e1", :iyr "2013", :eyr "2024", :ecl "brn", :pid "760753108", :byr "1931", :hgt "179cm"}
-     {:hcl "#cfa07d", :eyr "2025", :pid "166559648", :iyr "2011", :ecl "brn", :hgt "59in"}))
+      {:iyr "2013", :ecl "amb", :cid "350", :eyr "2023", :pid "028048884", :hcl "#cfa07d", :byr "1929"}
+      {:hcl "#ae17e1", :iyr "2013", :eyr "2024", :ecl "brn", :pid "760753108", :byr "1931", :hgt "179cm"}
+      {:hcl "#cfa07d", :eyr "2025", :pid "166559648", :iyr "2011", :ecl "brn", :hgt "59in"}))
   #_=> #'clojure-practice.advent-of-code-2020.day4-passport-processing/passport-details
   (def mandatory-fields #{:ecl :pid :eyr :hcl :byr :iyr :hgt})
   #_=> #'clojure-practice.advent-of-code-2020.day4-passport-processing/mandatory-fields
@@ -227,4 +228,7 @@
   ;{:passport {:hcl #ae17e1, :iyr 2013, :eyr 2024, :ecl brn, :pid 760753108, :byr 1931, :hgt 179cm}, :mandatory-fields #{:ecl :byr :iyr :hgt :pid :hcl :eyr}, :missing-fields #{}, :valid? true}
   ;{:passport {:hcl #cfa07d, :eyr 2025, :pid 166559648, :iyr 2011, :ecl brn, :hgt 59in}, :mandatory-fields #{:ecl :byr :iyr :hgt :pid :hcl :eyr}, :missing-fields #{:byr}, :valid? false}
   #_=> 2
+
+  (count-valid-passports "resources/passport_processing_input2.txt" mandatory-fields)
+  #_=> 260
   )
