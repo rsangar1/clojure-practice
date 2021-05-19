@@ -63,10 +63,11 @@
   how many passports are valid?")
 
 (defn read-input-file
-  [file-path]
-  (slurp file-path))
+  [path]
+  (slurp path))
 
 (defn club-multiline-passport-str
+  "combine multi-line passport strings into one string"
   [data]
   (loop [v      data
          p      ""
@@ -90,21 +91,25 @@
     (club-multiline-passport-str lines)))
 
 (defn field->kv-pair
+  "given string field is converted to key value pair"
   [f]
   (let [[k v] (str/split f #":")]
     {(keyword k) v}))
 
 (defn passport-str->passport-map
+  "convert passport details string into a map with key value pairs of passport details"
   [passport-str]
   (let [fields     (str/split (str/trim passport-str) #" ")
         fields-map (apply merge (map #(field->kv-pair %) fields))]
     fields-map))
 
 (defn data->passport-details
+  "convert given data to passport details"
   [input-data]
   (map #(passport-str->passport-map %) input-data))
 
 (defn valid-passport?
+  "verify if given passport is valid based on mandatory fields"
   [p mandatory-fields]
   (let [p-fields       (set (keys p))
         missing-fields (set/difference mandatory-fields p-fields)
@@ -120,6 +125,7 @@
   (map #(valid-passport? % mandatory-fields) passports))
 
 (defn count-valid-passports
+  "count of all valid passports from given input file"
   [input-file mandatory-fields]
   (let [input-data            (input-file->data input-file)
         passport-details-map  (map #(passport-str->passport-map %) input-data)
