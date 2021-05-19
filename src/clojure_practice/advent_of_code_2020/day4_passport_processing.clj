@@ -100,28 +100,28 @@
   "convert passport details string into a map with key value pairs of passport details"
   [passport-str]
   (let [fields     (str/split (str/trim passport-str) #" ")
-        fields-map (apply merge (map #(field->kv-pair %) fields))]
+        fields-map (apply merge (map field->kv-pair fields))]
     fields-map))
 
 (defn data->passport-details
   "convert given data to passport details"
   [input-data]
-  (map #(passport-str->passport-map %) input-data))
+  (map passport-str->passport-map input-data))
 
 (defn valid-passport?
   "verify if given passport is valid based on mandatory fields"
-  [p mandatory-fields]
-  (let [p-fields       (set (keys p))
+  [mandatory-fields passport]
+  (let [p-fields       (set (keys passport))
         missing-fields (set/difference mandatory-fields p-fields)
-        valid?         (= (count missing-fields) 0)
-        #__              #_(println {:passport         p
+        valid?         (zero? (count missing-fields))
+        #__              #_(println {:passport         passport
                                      :mandatory-fields mandatory-fields
                                      :missing-fields   missing-fields
                                      :valid?           valid?})]
     valid?))
 
 (defn valid-year?
-  [year min max]
+  [min max year]
   (let [year (Integer/parseInt year)]
     (if year
       (and (>= year min)
@@ -130,15 +130,15 @@
 
 (defn valid-byr?
   [byr]
-  (valid-year? byr 1920 2002))
+  (valid-year? 1920 2002 byr))
 
 (defn valid-iyr?
   [iyr]
-  (valid-year? iyr 2010 2020))
+  (valid-year? 2010 2020 iyr))
 
 (defn valid-eyr?
   [eyr]
-  (valid-year? eyr 2020 2030))
+  (valid-year? 2020 2030 eyr))
 
 (defn valid-hgt?
   [hgt]
@@ -175,22 +175,24 @@
        (valid-ecl? (:ecl p))
        (valid-pid? (:pid p))))
 
+;;TODO Use defmulti and try to run map instead of above function
+
 (defn valid-passport-part2?
   "verify if given passport is valid based on mandatory fields"
-  [p mandatory-fields]
-  (let [p-fields       (set (keys p))
+  [mandatory-fields passport]
+  (let [p-fields       (set (keys passport))
         missing-fields (set/difference mandatory-fields p-fields)
         valid?         (and (= (count missing-fields) 0)
-                            (valid-passport-values? p))
-        #__              #_(println {:passport         p
+                            (valid-passport-values? passport))
+        #__              #_(println {:passport         passport
                                      :mandatory-fields mandatory-fields
                                      :missing-fields   missing-fields
                                      :valid?           valid?})]
     valid?))
 
 (defn validate-passports
-  [passports mandatory-fields]
-  (map #(valid-passport? % mandatory-fields) passports))
+  [mandatory-fields passports]
+  (map #(valid-passport? mandatory-fields %) passports))
 
 (defn count-valid-passports
   "count of all valid passports from given input file"
@@ -198,12 +200,12 @@
   (let [input-data            (input-file->data input-file)
         passport-details-map  (map #(passport-str->passport-map %) input-data)
         ;_                    (print passport-details-map)
-        valid-passports-count (count (filter true? (validate-passports passport-details-map mandatory-fields)))]
+        valid-passports-count (count (filter true? (validate-passports mandatory-fields passport-details-map)))]
     valid-passports-count))
 
 (defn validate-passports-part2
-  [passports mandatory-fields]
-  (map #(valid-passport-part2? % mandatory-fields) passports))
+  [mandatory-fields passports]
+  (map #(valid-passport-part2? mandatory-fields %) passports))
 
 (defn count-valid-passports-part2
   "count of all valid passports from given input file"
@@ -211,11 +213,14 @@
   (let [input-data            (input-file->data input-file)
         passport-details-map  (map #(passport-str->passport-map %) input-data)
         ;_                    (print passport-details-map)
-        valid-passports-count (count (filter true? (validate-passports-part2 passport-details-map mandatory-fields)))]
+        valid-passports-count (count (filter true? (validate-passports-part2 mandatory-fields passport-details-map)))]
     valid-passports-count))
 
+
+
+
 (comment
-  (read-input-file "resources/passport_processing_input1.txt")
+  (read-input-file "resources/day4/passport_processing_input1.txt")
   #_=>
   ;"ecl:gry pid:860033327 eyr:2020 hcl:#fffffd\r
   ; byr:1937 iyr:2017 cid:147 hgt:183cm\r
@@ -264,7 +269,7 @@
   (club-multiline-passport-str ["a" "" "b" "c" "" "d" "e" "f"])
   #_=> [" a" " b c" " d e f"]
 
-  (input-file->data "resources/passport_processing_input1.txt")
+  (input-file->data "resources/day4/passport_processing_input1.txt")
   #_=> [" ecl:gry pid:860033327 eyr:2020 hcl:#fffffd byr:1937 iyr:2017 cid:147 hgt:183cm"
         " iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884 hcl:#cfa07d byr:1929"
         " hcl:#ae17e1 iyr:2013 eyr:2024 ecl:brn pid:760753108 byr:1931 hgt:179cm"
@@ -285,8 +290,8 @@
         {:hcl "#ae17e1", :iyr "2013", :eyr "2024", :ecl "brn", :pid "760753108", :byr "1931", :hgt "179cm"}
         {:hcl "#cfa07d", :eyr "2025", :pid "166559648", :iyr "2011", :ecl "brn", :hgt "59in"})
 
-  (valid-passport? {:ecl "gry", :pid "860033327", :eyr "2020", :hcl "#fffffd", :byr "1937", :iyr "2017", :cid "147", :hgt "183cm"}
-                   #{:ecl :pid :eyr :hcl :byr :iyr :hgt})
+  (valid-passport? #{:ecl :pid :eyr :hcl :byr :iyr :hgt}
+                   {:ecl "gry", :pid "860033327", :eyr "2020", :hcl "#fffffd", :byr "1937", :iyr "2017", :cid "147", :hgt "183cm"})
   #_=> true
 
   (def passport-details
@@ -297,29 +302,31 @@
   #_=> #'clojure-practice.advent-of-code-2020.day4-passport-processing/passport-details
   (def mandatory-fields #{:ecl :pid :eyr :hcl :byr :iyr :hgt})
   #_=> #'clojure-practice.advent-of-code-2020.day4-passport-processing/mandatory-fields
-  (validate-passports passport-details mandatory-fields)
+  (validate-passports mandatory-fields passport-details)
   ;{:passport {:ecl gry, :pid 860033327, :eyr 2020, :hcl #fffffd, :byr 1937, :iyr 2017, :cid 147, :hgt 183cm}, :mandatory-fields #{:ecl :byr :iyr :hgt :pid :hcl :eyr}, :missing-fields #{}, :valid? true}
   ;{:passport {:iyr 2013, :ecl amb, :cid 350, :eyr 2023, :pid 028048884, :hcl #cfa07d, :byr 1929}, :mandatory-fields #{:ecl :byr :iyr :hgt :pid :hcl :eyr}, :missing-fields #{:hgt}, :valid? false}
   ;{:passport {:hcl #ae17e1, :iyr 2013, :eyr 2024, :ecl brn, :pid 760753108, :byr 1931, :hgt 179cm}, :mandatory-fields #{:ecl :byr :iyr :hgt :pid :hcl :eyr}, :missing-fields #{}, :valid? true}
   ;{:passport {:hcl #cfa07d, :eyr 2025, :pid 166559648, :iyr 2011, :ecl brn, :hgt 59in}, :mandatory-fields #{:ecl :byr :iyr :hgt :pid :hcl :eyr}, :missing-fields #{:byr}, :valid? false}
   #_=> (true false true false)
 
-  (validate-passports [{:a "xy" :b 2} {:c "da"}] (set [:a]))
+  (validate-passports (set [:a]) [{:a "xy" :b 2} {:c "da"}])
   ;{:passport {:a xy, :b 2}, :mandatory-fields #{:a}, :missing-fields #{}, :valid? true}
   ;{:passport {:c da}, :mandatory-fields #{:a}, :missing-fields #{:a}, :valid? false}
   #_=> (true false)
 
-  (count-valid-passports "resources/passport_processing_input1.txt" mandatory-fields)
+  (count-valid-passports "resources/day4/passport_processing_input1.txt" mandatory-fields)
   ;({:ecl gry, :pid 860033327, :eyr 2020, :hcl #fffffd, :byr 1937, :iyr 2017, :cid 147, :hgt 183cm} {:iyr 2013, :ecl amb, :cid 350, :eyr 2023, :pid 028048884, :hcl #cfa07d, :byr 1929} {:hcl #ae17e1, :iyr 2013, :eyr 2024, :ecl brn, :pid 760753108, :byr 1931, :hgt 179cm} {:hcl #cfa07d, :eyr 2025, :pid 166559648, :iyr 2011, :ecl brn, :hgt 59in}){:passport {:ecl gry, :pid 860033327, :eyr 2020, :hcl #fffffd, :byr 1937, :iyr 2017, :cid 147, :hgt 183cm}, :mandatory-fields #{:ecl :byr :iyr :hgt :pid :hcl :eyr}, :missing-fields #{}, :valid? true}
   ;{:passport {:iyr 2013, :ecl amb, :cid 350, :eyr 2023, :pid 028048884, :hcl #cfa07d, :byr 1929}, :mandatory-fields #{:ecl :byr :iyr :hgt :pid :hcl :eyr}, :missing-fields #{:hgt}, :valid? false}
   ;{:passport {:hcl #ae17e1, :iyr 2013, :eyr 2024, :ecl brn, :pid 760753108, :byr 1931, :hgt 179cm}, :mandatory-fields #{:ecl :byr :iyr :hgt :pid :hcl :eyr}, :missing-fields #{}, :valid? true}
   ;{:passport {:hcl #cfa07d, :eyr 2025, :pid 166559648, :iyr 2011, :ecl brn, :hgt 59in}, :mandatory-fields #{:ecl :byr :iyr :hgt :pid :hcl :eyr}, :missing-fields #{:byr}, :valid? false}
   #_=> 2
 
-  (count-valid-passports "resources/passport_processing_input2.txt" mandatory-fields)
+  (count-valid-passports "resources/day4/passport_processing_input2.txt" mandatory-fields)
   #_=> 260
 
-  (valid-year? "2000" 2000 2010)
+  (valid-year? 2000 2010 "2000")
+  #_=> true
+
   (valid-byr? "2003")
   #_=> false
 
@@ -362,13 +369,25 @@
   (passport-str->passport-map "pid:087499704 hgt:74in ecl:grn iyr:2012 eyr:2030 byr:1980 hcl:#623a2f")
   #_=>{:pid "087499704", :hgt "74in", :ecl "grn", :iyr "2012", :eyr "2030", :byr "1980", :hcl "#623a2f"}
   (def passport-map {:pid "087499704", :hgt "74in", :ecl "grn", :iyr "2012", :eyr "2030", :byr "1980", :hcl "#623a2f"})
+  #_=> #'clojure-practice.advent-of-code-2020.day4-passport-processing/passport-map
   (valid-passport-values? passport-map)
   #_=> true
   (valid-byr? (:byr passport-map))
   #_=> true
 
-  (valid-passport-part2? passport-map mandatory-fields)
+  (valid-passport-part2? mandatory-fields passport-map)
   #_=> true
 
-  (count-valid-passports-part2 "resources/passport_processing_input_part2.txt" mandatory-fields)
+  (count-valid-passports-part2 "resources/day4/passport_processing_input_part2.txt" mandatory-fields)
+  #_=> 153
+  ;;using partial
+  (def valid-passport-p1? (partial valid-passport? #{:ecl :pid :eyr :hcl :byr :iyr :hgt}))
+  (valid-passport-p1? passport-map)
+  #_=> true
+
+  (def valid-year-with-partial? (partial valid-year? 1920 2002))
+  #_=> #'clojure-practice.advent-of-code-2020.day4-passport-processing/valid-year-with-partial?
+  (valid-year-with-partial? "2000")
+  #_=> true
+
   )
