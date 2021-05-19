@@ -201,6 +201,19 @@
         valid-passports-count (count (filter true? (validate-passports passport-details-map mandatory-fields)))]
     valid-passports-count))
 
+(defn validate-passports-part2
+  [passports mandatory-fields]
+  (map #(valid-passport-part2? % mandatory-fields) passports))
+
+(defn count-valid-passports-part2
+  "count of all valid passports from given input file"
+  [input-file mandatory-fields]
+  (let [input-data            (input-file->data input-file)
+        passport-details-map  (map #(passport-str->passport-map %) input-data)
+        ;_                    (print passport-details-map)
+        valid-passports-count (count (filter true? (validate-passports-part2 passport-details-map mandatory-fields)))]
+    valid-passports-count))
+
 (comment
   (read-input-file "resources/passport_processing_input1.txt")
   #_=>
@@ -356,4 +369,6 @@
 
   (valid-passport-part2? passport-map mandatory-fields)
   #_=> true
+
+  (count-valid-passports-part2 "resources/passport_processing_input_part2.txt" mandatory-fields)
   )
