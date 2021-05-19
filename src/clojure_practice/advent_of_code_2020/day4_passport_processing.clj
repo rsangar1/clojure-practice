@@ -120,6 +120,74 @@
                                      :valid?           valid?})]
     valid?))
 
+(defn valid-year?
+  [year min max]
+  (let [year (Integer/parseInt year)]
+    (if year
+      (and (>= year min)
+           (<= year max))
+      false)))
+
+(defn valid-byr?
+  [byr]
+  (valid-year? byr 1920 2002))
+
+(defn valid-iyr?
+  [iyr]
+  (valid-year? iyr 2010 2020))
+
+(defn valid-eyr?
+  [eyr]
+  (valid-year? eyr 2020 2030))
+
+(defn valid-hgt?
+  [hgt]
+  (let [[_ n m] (re-find #"^(\d+)(in|cm)$" hgt)
+        n (if (not (nil? n))
+            (Integer/parseInt n)
+            0)]
+    (case m
+      "in" (and (>= n 59)
+                (<= n 76))
+      "cm" (and (>= n 150)
+                (<= n 193))
+      false)))
+
+(defn valid-hcl?
+  [hcl]
+  (= (re-matches #"#[a-f 0-9]{6}" hcl) hcl))
+
+(defn valid-ecl?
+  [ecl]
+  (= (re-matches #"amb|blu|brn|gry|grn|hzl|oth" ecl) ecl))
+
+(defn valid-pid?
+  [pid]
+  (= (re-matches #"[0-9]{9}" pid) pid))
+
+(defn valid-passport-values?
+  [p]
+  (and (valid-byr? (:byr p))
+       (valid-iyr? (:iyr p))
+       (valid-eyr? (:eyr p))
+       (valid-hgt? (:hgt p))
+       (valid-hcl? (:hcl p))
+       (valid-ecl? (:ecl p))
+       (valid-pid? (:pid p))))
+
+(defn valid-passport-part2?
+  "verify if given passport is valid based on mandatory fields"
+  [p mandatory-fields]
+  (let [p-fields       (set (keys p))
+        missing-fields (set/difference mandatory-fields p-fields)
+        valid?         (and (= (count missing-fields) 0)
+                            (valid-passport-values? p))
+        #__              #_(println {:passport         p
+                                     :mandatory-fields mandatory-fields
+                                     :missing-fields   missing-fields
+                                     :valid?           valid?})]
+    valid?))
+
 (defn validate-passports
   [passports mandatory-fields]
   (map #(valid-passport? % mandatory-fields) passports))
@@ -237,4 +305,55 @@
 
   (count-valid-passports "resources/passport_processing_input2.txt" mandatory-fields)
   #_=> 260
+
+  (valid-year? "2000" 2000 2010)
+  (valid-byr? "2003")
+  #_=> false
+
+  (valid-byr? "2002")
+  #_=> true
+
+  (valid-hgt? "60in")
+  #_=> true
+
+  (valid-hgt? "190cm")
+  #_=> true
+
+  (valid-hgt? "190in")
+  #_=> false
+
+  (valid-hgt? "190")
+  #_=> false
+
+  (valid-hcl? "#123abc")
+  #_=> true
+
+  (valid-hcl? "#123abz")
+  #_=> false
+
+  (valid-hcl? "123abc")
+  #_=> false
+
+  (valid-ecl? "brn")
+  #_=> true
+
+  (valid-ecl? "wat")
+  #_=> false
+
+  (valid-pid? "000000001")
+  #_=> true
+
+  (valid-pid? "0123456789")
+  #_=> false
+
+  (passport-str->passport-map "pid:087499704 hgt:74in ecl:grn iyr:2012 eyr:2030 byr:1980 hcl:#623a2f")
+  #_=>{:pid "087499704", :hgt "74in", :ecl "grn", :iyr "2012", :eyr "2030", :byr "1980", :hcl "#623a2f"}
+  (def passport-map {:pid "087499704", :hgt "74in", :ecl "grn", :iyr "2012", :eyr "2030", :byr "1980", :hcl "#623a2f"})
+  (valid-passport-values? passport-map)
+  #_=> true
+  (valid-byr? (:byr passport-map))
+  #_=> true
+
+  (valid-passport-part2? passport-map mandatory-fields)
+  #_=> true
   )
