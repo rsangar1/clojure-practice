@@ -1,4 +1,4 @@
-(ns clojure-practice.advent-of-code-2020.day4-passport-processing
+(ns clojure-practice.advent-of-code-2020.day4.passport-processing
   (:require [clojure.string :as str]
             [clojure.set :as set]))
 
@@ -299,9 +299,9 @@
       {:iyr "2013", :ecl "amb", :cid "350", :eyr "2023", :pid "028048884", :hcl "#cfa07d", :byr "1929"}
       {:hcl "#ae17e1", :iyr "2013", :eyr "2024", :ecl "brn", :pid "760753108", :byr "1931", :hgt "179cm"}
       {:hcl "#cfa07d", :eyr "2025", :pid "166559648", :iyr "2011", :ecl "brn", :hgt "59in"}))
-  #_=> #'clojure-practice.advent-of-code-2020.day4-passport-processing/passport-details
+  #_=> #'clojure-practice.advent-of-code-2020.passport-processing/passport-details
   (def mandatory-fields #{:ecl :pid :eyr :hcl :byr :iyr :hgt})
-  #_=> #'clojure-practice.advent-of-code-2020.day4-passport-processing/mandatory-fields
+  #_=> #'clojure-practice.advent-of-code-2020.passport-processing/mandatory-fields
   (validate-passports mandatory-fields passport-details)
   ;{:passport {:ecl gry, :pid 860033327, :eyr 2020, :hcl #fffffd, :byr 1937, :iyr 2017, :cid 147, :hgt 183cm}, :mandatory-fields #{:ecl :byr :iyr :hgt :pid :hcl :eyr}, :missing-fields #{}, :valid? true}
   ;{:passport {:iyr 2013, :ecl amb, :cid 350, :eyr 2023, :pid 028048884, :hcl #cfa07d, :byr 1929}, :mandatory-fields #{:ecl :byr :iyr :hgt :pid :hcl :eyr}, :missing-fields #{:hgt}, :valid? false}
@@ -369,7 +369,7 @@
   (passport-str->passport-map "pid:087499704 hgt:74in ecl:grn iyr:2012 eyr:2030 byr:1980 hcl:#623a2f")
   #_=>{:pid "087499704", :hgt "74in", :ecl "grn", :iyr "2012", :eyr "2030", :byr "1980", :hcl "#623a2f"}
   (def passport-map {:pid "087499704", :hgt "74in", :ecl "grn", :iyr "2012", :eyr "2030", :byr "1980", :hcl "#623a2f"})
-  #_=> #'clojure-practice.advent-of-code-2020.day4-passport-processing/passport-map
+  #_=> #'clojure-practice.advent-of-code-2020.passport-processing/passport-map
   (valid-passport-values? passport-map)
   #_=> true
   (valid-byr? (:byr passport-map))
@@ -386,7 +386,7 @@
   #_=> true
 
   (def valid-year-with-partial? (partial valid-year? 1920 2002))
-  #_=> #'clojure-practice.advent-of-code-2020.day4-passport-processing/valid-year-with-partial?
+  #_=> #'clojure-practice.advent-of-code-2020.passport-processing/valid-year-with-partial?
   (valid-year-with-partial? "2000")
   #_=> true
 
