@@ -49,13 +49,23 @@
   BFFFBBFRRR: row 70, column 7, seat ID 567.
   FFFBBBFRRR: row 14, column 7, seat ID 119.
   BBFFBBFRLL: row 102, column 4, seat ID 820.
-  As a sanity check, look through your list of boarding passes. What is the highest seat ID on a boarding pass?")
+  As a sanity check, look through your list of boarding passes. What is the highest seat ID on a boarding pass?
+
+  --- Part Two --
+  Ding! The \"fasten seat belt\" signs have turned on. Time to find your seat.
+
+  It's a completely full flight, so your seat should be the only missing boarding pass in your list. However, there's a
+  catch: some of the seats at the very front and back of the plane don't exist on this aircraft, so they'll be missing
+  from your list as well.\n\nYour seat wasn't at the very front or back, though; the seats with IDs +1 and -1 from
+  yours will be in your list.\n\nWhat is the ID of your seat?
+  ")
 
 (defn read-input-file
   [path]
   (slurp path))
 
 (defn ^:private binary-str->decimal
+  "converts given binary string into a decimal number"
   [binary-str]
   (read-string (str "2r" binary-str)))
 
@@ -79,6 +89,7 @@
       (apply str result))))
 
 (defn get-seat-coordinates
+  "derive seat coordinates based on the input string and row, col substrings"
   [input-str row-begin row-end col-begin col-end]
   (let [binary-str       (input-str->binary-str input-str)
         row-str          (subs binary-str row-begin row-end)
@@ -93,6 +104,7 @@
     seat-coordinates))
 
 (defn ^:private calculate-seat-id*
+  "calculate seat id based on the multiplier and the seat coordinates"
   [multiplier seat-coordinates]
   (let [row (:row seat-coordinates)
         col (:col seat-coordinates)]
@@ -109,21 +121,34 @@
     seat-ids))
 
 (defn find-highest-seat-id
+  "highest seat id among given seats"
   [input-file-path]
   (let [seat-ids (calculate-seat-ids input-file-path)
         _        (apply print "all seat ids: " seat-ids)]
     (apply max seat-ids)))
 
+;;-----------------------------part-2----------------------------
+#_(defn find-missing-seat-id
+    [input-file-path]
+    (let [seat-ids           (calculate-seat-ids input-file-path)
+          hightest-seat-id   (apply max seat-ids)
+          lowest-seat-id     (apply min seat-ids)
+          all-seat-ids-set   (set (range lowest-seat-id hightest-seat-id))
+          input-seat-ids-set (set seat-ids)
+          missing-seat-id    (set/difference all-seat-ids-set input-seat-ids-set)]
+      (first missing-seat-id)))
+
 (defn find-missing-seat-id
   [input-file-path]
-  (let [seat-ids           (calculate-seat-ids input-file-path)
-        hightest-seat-id   (apply max seat-ids)
-        lowest-seat-id     (apply min seat-ids)
-        all-seat-ids-set   (set (range lowest-seat-id hightest-seat-id))
-        input-seat-ids-set (set seat-ids)
-        missing-seat-id    (set/difference all-seat-ids-set input-seat-ids-set)]
-    (first missing-seat-id)))
-
+  (let [seat-ids              (calculate-seat-ids input-file-path)
+        hightest-seat-id      (apply max seat-ids)
+        lowest-seat-id        (apply min seat-ids)
+        all-seat-ids          (range lowest-seat-id (inc hightest-seat-id))
+        sum-of-all-seat-ids   (apply + all-seat-ids)
+        sum-of-given-seat-ids (apply + seat-ids)
+        ;_                     (print (str "sum of all seat ids: " sum-of-all-seat-ids " and sum of given seat ids: " sum-of-given-seat-ids))
+        ]
+    (- sum-of-all-seat-ids sum-of-given-seat-ids)))
 
 
 (comment
@@ -164,5 +189,4 @@
 
   (find-missing-seat-id "resources/day5/aoc-input1.txt")
   #_=> 633
-
   )
