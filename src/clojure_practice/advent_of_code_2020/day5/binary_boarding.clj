@@ -70,15 +70,19 @@
   (read-string (str "2r" binary-str)))
 
 (defn ^:private char->binary-char
-  [ch]
-  (case ch
-    \B 1
-    \R 1
-    \F 0
-    \L 0
-    "invalid input"))
+  [c]
+  ({\B \1
+    \R \1
+    \F \0
+    \L \0} c))
 
-(defn input-str->binary-str
+(def char->bit
+  {\B 1
+   \R 1
+   \F 0
+   \L 0})
+
+(defn input-str->binary-str1
   [input-str]
   (loop [xs     (vec input-str)
          result []]
@@ -88,15 +92,21 @@
              (conj result (char->binary-char (first xs))))
       (apply str result))))
 
+(defn input-str->binary-str
+  [input-str]
+  (->> (concat input-str)
+       (map char->bit)
+       (reduce str)))
+
 (defn get-seat-coordinates
   "derive seat coordinates based on the input string and row, col substrings"
-  [input-str row-begin row-end col-begin col-end]
-  (let [binary-str       (input-str->binary-str input-str)
+  [boarding-pass row-begin row-end col-begin col-end]       ;;TODO use opts map so that arg list is not restricted by order
+  (let [binary-str       (input-str->binary-str boarding-pass)
         row-str          (subs binary-str row-begin row-end)
         col-str          (subs binary-str col-begin col-end)
         row              (binary-str->decimal row-str)
         col              (binary-str->decimal col-str)
-        seat-coordinates {:input-str  input-str
+        seat-coordinates {:input-str  boarding-pass         ;;TODO use spy function to print instead of adding within fn
                           :binary-str binary-str
                           :row        row
                           :col        col}
@@ -189,4 +199,12 @@
 
   (find-missing-seat-id "resources/day5/aoc-input1.txt")
   #_=> 633
+
+  (find-missing-seat-id "resources/day5/sample-seats-input.txt")
+
+  (map {:a 1 :b 2} [:a :b])
+  (reduce str [1 0 0 1])
+
+  (input-str->binary-str "BFFFBBFRRR")
+  #_=> "1000110111"
   )
