@@ -1,6 +1,7 @@
 (ns clojure-practice.advent-of-code-2020.day6.custom-customs
   (:require [clojure.string :as str]
-            [clojure-practice.advent-of-code-2020.util :as util]))
+            [clojure-practice.advent-of-code-2020.util :as util]
+            [clojure.set :as set]))
 
 (comment
   " --- Day 6: Custom Customs ---
@@ -48,44 +49,99 @@
   The last group contains one person who answered \"yes\" to only 1 question, b.
   In this example, the sum of these counts is 3 + 3 + 3 + 1 + 1 = 11.
 
-  For each group, count the number of questions to which anyone answered \"yes\". What is the sum of those counts?")
+  For each group, count the number of questions to which anyone answered \"yes\". What is the sum of those counts?
 
-(defn ^:private group-customs
-  []
-  )
+  --- Part Two ---
+  As you finish the last group's customs declaration, you notice that you misread one word in the instructions:
+
+  You don't need to identify the questions to which anyone answered \"yes \" ; you need to identify the questions to
+  which everyone answered  yes!
+
+  Using the same example as above:
+
+  abc
+
+  a
+  b
+  c
+
+  ab
+  ac
+
+  a
+  a
+  a
+  a
+
+  b
+
+  This list represents answers from five groups:
+
+  In the first group, everyone (all 1 person) answered \"yes \" to 3 questions: a, b, and c.
+  In the second group, there is no question to which everyone answered \"yes \".
+  In the third group, everyone answered yes to only 1 question, a. Since some people did not answer \"yes \" to b or c,
+  they don't count.
+  In the fourth group, everyone answered yes to only 1 question, a.
+  In the fifth group, everyone (all 1 person) answered \"yes \" to 1 question, b.
+  In this example, the sum of these counts is 3 + 0 + 1 + 1 + 1 = 6.
+
+  For each group, count the number of questions to which everyone answered \"yes \". What is the sum of those counts?")
 
 (defn unique-yes-answers
-  [group-answers]
-  (map set group-answers))
+  [groups-answers]
+  (map set groups-answers))
 
 (defn customs-groups-yes-answers
   [input-file-path]
   (let [input (util/read-input-file input-file-path)]
-    (->> (str/split input #"\r\n\r\n")
-         (map str/split-lines)
-         (map str/join))))
+    (->> (str/split input #"\n\n")
+         (map str/split-lines))))
 
-(defn calc-all-unique-group-yes-answers
+(defn count-all-unique-group-yes-answers
   [input-file-path]
   (->> (customs-groups-yes-answers input-file-path)
+       (map str/join)
        unique-yes-answers
+       (map count)
+       (reduce +)))
+
+(defn ^:private common-yes-answers
+  [group-answers]
+  (->> (map set group-answers)
+       (apply set/intersection)))
+
+(defn count-common-group-yes-answers
+  [input-file-path]
+  (->> (customs-groups-yes-answers input-file-path)
+       (map common-yes-answers)
        (map count)
        (reduce +)))
 
 (comment
   (customs-groups-yes-answers "resources/day6/small-input.txt")
-  #_=> ("abc" "abc" "abac" "aaa" "b")
+  #_=> (["abc"] ["a" "b" "c"] ["ab" "ac"] ["a" "a" "a"] ["b"])
 
   (unique-yes-answers '("abc" "abc" "abac" "aaa" "b"))
   #_=> (#{\a \b \c} #{\a \b \c} #{\a \b \c} #{\a} #{\b})
 
-  (calc-all-unique-group-yes-answers "resources/day6/small-input.txt")
+  (count-all-unique-group-yes-answers "resources/day6/small-input.txt")
   #_=> 11
 
-  (calc-all-unique-group-yes-answers "resources/day6/input1.txt")
+  (count-all-unique-group-yes-answers "resources/day6/input1.txt")
   #_=> 6565
 
-  (->> (str/split (slurp "resources/day6/small-input.txt") #"\r\n\r\n")
-       (map str/split-lines))
+  (common-yes-answers ["abc"])
+  #_=> #{\a \b \c}
 
+  (common-yes-answers ["a" "b" "c"])
+  #_=> #{}
+
+  (common-yes-answers ["ab" "ac"])
+  #_=> #{\a}
+
+  (count-common-group-yes-answers "resources/day6/small-input.txt")
+  #_=> 6
+
+  (count-common-group-yes-answers "resources/day6/input1.txt")
+  #_=> 3137
   )
