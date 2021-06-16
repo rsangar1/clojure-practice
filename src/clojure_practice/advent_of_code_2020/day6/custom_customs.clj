@@ -87,63 +87,67 @@
 
   For each group, count the number of questions to which everyone answered \"yes \". What is the sum of those counts?")
 
-(defn customs-groups-yes-answers
+(defn customs-groups-answers
   [input-file-path]
   (let [input (util/read-input-file input-file-path)]
     (->> (str/split input #"\n\n")
          (map str/split-lines))))
 
-(defn unique-yes-answers
+(defn ^:private unique-answers
+  "unique yes answers in a group"
   [group-answers]
   (->> (map set group-answers)
        (apply set/union)))
 
-(defn count-all-unique-group-yes-answers
+(defn count-all-unique-group-answers
   [input-file-path]
-  (->> (customs-groups-yes-answers input-file-path)
-       (map unique-yes-answers)
+  (->> (customs-groups-answers input-file-path)
+       (map unique-answers)
        (map count)
        (reduce +)))
 
-(defn ^:private common-yes-answers
+(defn ^:private common-answers
+  "common yes answers in a group"
   [group-answers]
   (->> (map set group-answers)
        (apply set/intersection)))
 
 (defn count-common-group-yes-answers
   [input-file-path]
-  (->> (customs-groups-yes-answers input-file-path)
-       (map common-yes-answers)
+  (->> (customs-groups-answers input-file-path)
+       (map common-answers)
        (map count)
        (reduce +)))
 
 (comment
-  (customs-groups-yes-answers "resources/day6/small-input.txt")
+  (customs-groups-answers "resources/day6/small-input.txt")
   #_=> (["abc"] ["a" "b" "c"] ["ab" "ac"] ["a" "a" "a"] ["b"])
 
-  (unique-yes-answers ["abc"])
+  (unique-answers ["abc"])
   #_=> #{\a \b \c}
 
-  (unique-yes-answers ["ab" "ac"])
+  (unique-answers ["ab" "ac"])
   #_=> #{\a \b \c}
 
-  (unique-yes-answers ["a" "a" "a"])
+  (unique-answers ["a" "a" "a"])
   #_=> #{\a}
 
 
-  (count-all-unique-group-yes-answers "resources/day6/small-input.txt")
+  (count-all-unique-group-answers "resources/day6/small-input.txt")
   #_=> 11
 
-  (count-all-unique-group-yes-answers "resources/day6/input1.txt")
+  (count-all-unique-group-answers "resources/day6/input1.txt")
   #_=> 6565
 
-  (common-yes-answers ["abc"])
+
+
+  (common-answers ["abc"])
   #_=> #{\a \b \c}
 
-  (common-yes-answers ["a" "b" "c"])
+  (common-answers ["a" "b" "c"])
   #_=> #{}
 
-  (common-yes-answers ["ab" "ac"])
+  (common-answers ["ab" "ac"])
   #_=> #{\a}
 
   (count-common-group-yes-answers "resources/day6/small-input.txt")
