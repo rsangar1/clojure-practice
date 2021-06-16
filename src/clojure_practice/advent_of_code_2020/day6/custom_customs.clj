@@ -87,21 +87,21 @@
 
   For each group, count the number of questions to which everyone answered \"yes \". What is the sum of those counts?")
 
-(defn unique-yes-answers
-  [groups-answers]
-  (map set groups-answers))
-
 (defn customs-groups-yes-answers
   [input-file-path]
   (let [input (util/read-input-file input-file-path)]
     (->> (str/split input #"\n\n")
          (map str/split-lines))))
 
+(defn unique-yes-answers
+  [group-answers]
+  (->> (map set group-answers)
+       (apply set/union)))
+
 (defn count-all-unique-group-yes-answers
   [input-file-path]
   (->> (customs-groups-yes-answers input-file-path)
-       (map str/join)
-       unique-yes-answers
+       (map unique-yes-answers)
        (map count)
        (reduce +)))
 
@@ -121,8 +121,15 @@
   (customs-groups-yes-answers "resources/day6/small-input.txt")
   #_=> (["abc"] ["a" "b" "c"] ["ab" "ac"] ["a" "a" "a"] ["b"])
 
-  (unique-yes-answers '("abc" "abc" "abac" "aaa" "b"))
-  #_=> (#{\a \b \c} #{\a \b \c} #{\a \b \c} #{\a} #{\b})
+  (unique-yes-answers ["abc"])
+  #_=> #{\a \b \c}
+
+  (unique-yes-answers ["ab" "ac"])
+  #_=> #{\a \b \c}
+
+  (unique-yes-answers ["a" "a" "a"])
+  #_=> #{\a}
+
 
   (count-all-unique-group-yes-answers "resources/day6/small-input.txt")
   #_=> 11
