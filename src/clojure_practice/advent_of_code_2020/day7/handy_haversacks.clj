@@ -72,14 +72,15 @@
     (let [[needed-content _] (str/split content-str #" bag")
           [count texture color] (str/split needed-content #" ")]
       [(Integer/parseInt count) (str texture " " color)])
-    []))
+    [0 ""]))
 
 (defn input-line->bag-entry
   "convert given input line to a map entry"
   [input-line]
-  (let [[bag contents] (str/split input-line #" bags contain ")
+  (let [[bag-color contents] (str/split input-line #" bags contain ")
         bag-contents (map content-str->content (str/split contents #", "))]
-    {bag (vec bag-contents)}))
+    (when some? bag-contents
+      {bag-color (vec bag-contents)})))
 
 (defn input-str->bags-data
   "convert given input string to bags map"
@@ -90,52 +91,37 @@
        (apply merge)))
 
 #_(defn contain-colored-bag-directly?
-  "if the color exists directly in the current bag"
-  [bag color]
-  (some true? (map #(= color (:type %)) bag)))
-
-(defn contain-colored-bag-directly?
   "if color exists directly in the current bag"
   [bag color]
-  (some true? (map #(= color (second %)) bag)))
+  (some (fn [[_ c]]
+          (= c color)) bag))
 
-#_(defn contain-colored-bag?
-  "if given colored bag exists somewhere within the bag"
-  [bags bag-content bag-type]
-  (or (contain-colored-bag-directly? bag-content bag-type)
-      (some true? (map #(contain-colored-bag? bags (bags (:type %)) bag-type) bag-content))
-      false))
-
-#_(defn contain-colored-bag?
-    "check if given colored bag exists somewhere within the bag.
-    if nil, return false"
-    [bags bag-content color]
-    (or (contain-colored-bag-directly? bag-content color)
-        (some true?
-              (map #(contain-colored-bag? bags
-                                          (bags (:type %))
-                                          color)
-                   bag-content))
-        false))
-
-(defn contain-colored-bag?
+#_(defn contains-colored-bag?
   "check if given colored bag exists somewhere within the bag.
   if nil, return false"
   [bags bag-content color]
   (or (contain-colored-bag-directly? bag-content color)
       (some true?
-            (map #(contain-colored-bag? bags
+            (map #(contains-colored-bag? bags
                                         (bags (second %))
                                         color)
                  bag-content))
       false))
 
+(defn contains-colored-bag?
+  [bags-data current-bag-color search-color]                     ;;TODO names could be better
+  (->> (bags-data current-bag-color)
+       (some (fn [[_ color]]
+               (or (= color search-color)
+                   (contains-colored-bag? bags-data color search-color)
+                   false)))))
+
 (defn bags-holding-colored-bag
   "count bags that hold at least one of the given bag color directly or within"
-  [bags color]
-  (let [bag-colors (keys bags)]
+  [bags-data color]
+  (let [bag-colors (keys bags-data)]
     (->> bag-colors
-         (map #(contain-colored-bag? bags (bags %) color))
+         (map #(contains-colored-bag? bags-data % color))
          (filter true?)
          count)))
 
@@ -144,25 +130,19 @@
   (let [bags-data (input-str->bags-data (util/read-input-file input-file-path))]
     (bags-holding-colored-bag bags-data "shiny gold")))
 
-(defn count-bags-in-bag
-  [bag-content]
-  (->> bag-content
-       (map #(or (:count %) 0))
-       (apply +)))
-
-(defn count-all-bags-within-colored-bag
-  [bags bag-type]
-  (->> (bags bag-type)
-       (reduce (fn [x result]
-                 (let [n (or (:count x) 0)
-                       _ (print (str "current count " n))]
-                   (+ result n
-                      (* n (count-all-bags-within-colored-bag bags (:type x)))))) 0)))
+(defn count-bags-in-a-bag
+  [bags-data bag-color]
+  (->> (bags-data bag-color)
+       (reduce (fn [result [n color]]
+                 (+ result
+                    n
+                    (* n (count-bags-in-a-bag bags-data color))))
+               0)))
 
 (defn part2
   [input-file-path]
   (let [bags-data (input-str->bags-data (util/read-input-file input-file-path))]
-    (bags-holding-colored-bag bags-data "shiny gold")))
+    (count-bags-in-a-bag bags-data "shiny gold")))
 
 
 
@@ -190,7 +170,7 @@
   #_=> [1 "shiny gold"]
 
   (content-str->content "no other bags.")
-  #_=> []
+  #_=> nil
 
   ;(input-line->bag-entry "light red bags contain 1 bright white bag, 2 muted yellow bags.")
   ;#_=> {"light red" [{:type "bright white", :count 1} {:type "muted yellow", :count 2}]}
@@ -234,30 +214,37 @@
 
   (def sample-data {"muted yellow" [[2 "shiny gold"] [9 "faded blue"]],
                     "light red"    [[1 "bright white"] [2 "muted yellow"]],
-                    "dotted black" [[]],
+                    "dotted black" [[0 ""]],
                     "dark orange"  [[3 "bright white"] [4 "muted yellow"]],
                     "bright white" [[1 "shiny gold"]],
                     "shiny gold"   [[1 "dark olive"] [2 "vibrant plum"]],
-                    "faded blue"   [[]],
+                    "faded blue" [[0 ""]],
                     "vibrant plum" [[5 "faded blue"] [6 "dotted black"]],
                     "dark olive"   [[3 "faded blue"] [4 "dotted black"]]})
 
-  (contain-colored-bag-directly? [[2 "shiny gold"] [9 "faded blue"]] "shiny gold")
+  ;(contain-colored-bag-directly? [[2 "shiny gold"] [9 "faded blue"]] "shiny gold")
+  ;#_=> true
+  ;
+  ;(contain-colored-bag-directly? [[3 "bright white"] [4 "muted yellow"]] "shiny gold")
+  ;#_=> nil
+
+  ;(contain-colored-bag-directly? [[]] "shiny gold")
+  ;#_=> nil
+  ;
+  ;(contains-colored-bag? sample-data [[3 "bright white"] [4 "muted yellow"]] "shiny gold")
+  ;#_=> true
+  ;
+  ;(contains-colored-bag? sample-data [[]] "shiny gold")
+  ;#_=> false
+
+  (contains-colored-bag? sample-data "muted yellow" "shiny gold")
   #_=> true
 
-  (contain-colored-bag-directly? [[3 "bright white"] [4 "muted yellow"]] "shiny gold")
-  #_=> nil
-  ;(some true? ["a"])
-  ;(map #(= "shiny gold" (:type %)) [{:type "bright white", :count 3} {:type "muted yellow", :count 4}])
-
-  (contain-colored-bag-directly? [[]] "shiny gold")
-  #_=> nil
-
-  (contain-colored-bag? sample-data [[3 "bright white"] [4 "muted yellow"]] "shiny gold")
+  (contains-colored-bag? sample-data "dark orange" "shiny gold")
   #_=> true
 
-  (contain-colored-bag? sample-data [[]] "shiny gold")
-  #_=> false
+  (contains-colored-bag? sample-data "vibrant plum" "shiny gold")
+  #_=> nil
 
   (bags-holding-colored-bag sample-data "shiny gold")
   #_=> 4
@@ -266,22 +253,14 @@
   #_=> 177
 
 
-  (count-bags-in-bag [{:type "bright white", :count 3} {:type "muted yellow", :count 4}])
-  #_=> 7
 
-  (count-bags-in-bag [{}])
-  #_=> 0
+  (count-bags-in-a-bag sample-data "shiny gold")
+  #_=> 32
 
-  (count-all-bags-within-colored-bag sample-data "shiny gold")
+  (part2 "resources/day7/sample-input-part2.txt")
+  #_=> 126
 
-  (sample-data "shiny gold")
-
-  ;(->> "shiny gold"
-  ;  {"shiny gold" [{"abc" 2}]})
-
-  (reduce (fn [x result]
-            (let [n (or (:count x) 0)]
-              (+ result n
-                 (* n (count-all-bags-within-colored-bag sample-data (:type x)))))) 0 [{:type "dark olive", :count 1} {:type "vibrant plum", :count 2}])
+  (part2 "resources/day7/aoc-input1.txt")
+  #_=> 34988
 
   )
