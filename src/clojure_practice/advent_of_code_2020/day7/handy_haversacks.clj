@@ -92,12 +92,15 @@
 
 ;;;;;;;;;;;;  Part-1  ;;;;;;;;;;;;;;
 (defn contains-colored-bag?
+  "check to see if given colored bag exists in current bag directly or indirectly"
   [bags-data current-bag-color search-color]                ;;TODO names could be better
   (->> (bags-data current-bag-color)
        (some (fn [[_ color]]
                (or (= color search-color)
                    (contains-colored-bag? bags-data color search-color)
                    false)))))
+;;TODO
+;;(def memoized-fn (memoize contains-colored-bag?))
 
 (defn bags-holding-colored-bag
   "count bags that hold at least one of the given bag color directly or within"
@@ -116,6 +119,7 @@
 
 ;;;;;;;;;;;;  Part-2  ;;;;;;;;;;;;;;
 (defn count-bags-in-a-bag
+  "count all bags within given colored bag"
   [bags-data bag-color]
   (->> (bags-data bag-color)
        (reduce (fn [result [n color]]
@@ -201,8 +205,6 @@
 
   (part1 "resources/day7/aoc-input1.txt")
   #_=> 177
-
-
 
   (count-bags-in-a-bag sample-data "shiny gold")
   #_=> 32
