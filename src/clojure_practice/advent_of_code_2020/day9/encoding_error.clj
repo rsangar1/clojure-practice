@@ -55,9 +55,7 @@
   only number that does not follow this rule is 127.
 
   The first step of attacking the weakness in the XMAS data is to find the first number in the list (after the preamble)
-  which is not the sum of two of the 25 numbers before it. What is the first number that does not have this property?"
-
-  )
+  which is not the sum of two of the 25 numbers before it. What is the first number that does not have this property?")
 
 
 (defn input-str->encrypted-data
@@ -67,53 +65,25 @@
        (map #(Long/parseLong %))
        vec))
 
-(defn two-sum-equals-target?
+(defn any-two-sum-equals-target?
+  "check if sum of any of the two numbers in v equals to given target"
   [v target]
   (not (every? false? (map #(and (not (nil? %))
                                  (not= % (- target %))
                                  (contains? (set v) (- target %))) v))))
 
 (defn first-invalid-number
+  "finds the first invalid number based on given preamble number of elements"
   [input preamble]
   (loop [i      input
-         v      (vec (take preamble input))
+         v      (take preamble input)
          target (nth i preamble)]
     (if (and (= preamble (count v))
-             (two-sum-equals-target? v target))
+             (any-two-sum-equals-target? v target))
       (recur (next i)
              (take preamble i)
              (nth i preamble))
       target)))
-
-(defn find-contiguos-v
-  [v target i]
-  (loop [v1  v
-         j   i
-         sum 0]
-    ;(println v1 " " j " " sum)
-    (if (and (not (nil? v1))
-             (< sum target))
-      (recur (next v1)
-             (inc j)
-             (+ sum (nth v j)))
-      (when (= sum target)
-        (subvec v i j))))
-  )
-
-(defn calc-encryption-weakness
-  [v]
-  (+ (apply min v)
-     (apply max v)))
-
-(defn encryption-weakness
-  [v target]
-  (loop [i 0]
-    (let [res (find-contiguos-v v target i)]
-      (if (and (> (count v) i)
-               (not (nil? res)))
-        (calc-encryption-weakness res)
-        (recur (inc i))))))
-
 
 (defn part1
   [input-file-path]
@@ -122,6 +92,41 @@
         preamble   25]
     (first-invalid-number input-data preamble)))
 
+
+
+
+
+
+(defn find-contiguous-subvec
+  "finds contiguous elements in given vec v starting with index i that sums up to target"
+  [v target i]
+  (loop [v1  v
+         j   i
+         sum 0]
+    (if (and (not (nil? v1))
+             (< sum target))
+      (recur (next v1)
+             (inc j)
+             (+ sum (nth v j)))
+      (when (= sum target)
+        (subvec v i j)))))
+
+(defn ^:private encryption-weakness!
+  "sum of max and min elements in given vec v"
+  [v]
+  (+ (apply min v)
+     (apply max v)))
+
+(defn encryption-weakness
+  "finds encryption weakness in given vec v and target"
+  [v target]
+  (loop [i 0]
+    (let [res (find-contiguous-subvec v target i)]
+      (if (and (> (count v) i)
+               (not (nil? res)))
+        (encryption-weakness! res)
+        (recur (inc i))))))
+
 (defn part2
   [input-file-path]
   (let [input-str  (slurp input-file-path)
@@ -129,46 +134,41 @@
         target     (part1 input-file-path)]
     (encryption-weakness input-data target)))
 
+
+
 (comment
 
+  ;;; part-1
   (input-str->encrypted-data (slurp "resources/day9/sample-input.txt"))
   #_=> [35 20 15 25 47 40 62 55 65 95 102 117 150 182 127 219 299 277 309 576]
 
-  (two-sum-equals-target? [2 3 4] 8)
+  (any-two-sum-equals-target? [2 3 4] 8)
   #_=> false
 
-  (two-sum-equals-target? [2 3 4] 6)
+  (any-two-sum-equals-target? [2 3 4] 6)
 
   (loop-recur-ex [2 3 4 5 6])
 
-  (two-sum-equals-target? [2 3 2 1] 10)
-
-  (loop [x 10]
-    (when (> x 1)
-      (println x)
-      (recur (- x 2))))
-
-  (loop [x [2 3 4]]
-    (when x
-      (println (first x))
-      (recur (next x))))
+  (any-two-sum-equals-target? [2 3 2 1] 10)
 
   (first-invalid-number [35 20 15 25 47 40 62 55 65 95 102 117 150 182 127 219 299 277 309 576] 5)
   #_=> 127
 
   (part1 "resources/day9/aoc-input.txt")
+  #_=> 258585477
 
 
 
 
+  ;;; part-2
 
-  (find-contiguos-v [2 3 4 5] 9 0)
+  (find-contiguous-subvec [2 3 4 5] 9 0)
   #_=> [2 3 4]
 
-  (calc-encryption-weakness [2 3 4 5])
+  (encryption-weakness! [2 3 4 5])
   #_=> 7
 
-  (calc-encryption-weakness [2 3 4 5 99])
+  (encryption-weakness! [2 3 4 5 99])
   #_=> 101
 
   (encryption-weakness [2 3 4 5] 9)
