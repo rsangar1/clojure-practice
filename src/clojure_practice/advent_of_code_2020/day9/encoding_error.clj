@@ -65,16 +65,59 @@
        (map #(Long/parseLong %))
        vec))
 
+#_(defn any-two-sum-equals-target?
+  "check if sum of any of the two numbers in v equals to given target"
+  [v target]
+  (->> v
+       (map #(and (not (nil? %))
+                  (not= % (- target %))
+                  (contains? (set v) (- target %))))
+       ;(every? false?)
+       ;not
+       ))
+
+
+
+#_(defn any-two-sum-equals-target?
+  "check if sum of any of the two numbers in v equals to given target"
+  [encoded-seq target]
+  (let [sum-complement-sets (map (fn [n] (->> encoded-seq
+                                              (map #(+ % n))
+                                              (filter #(not= (* 2 n) %))))
+                                 encoded-seq)
+        ;;here
+
+
+        ;sum-complement-in-seq? (fn [n] (and (not (nil? n))
+        ;                                (not= n (- target n))
+        ;                                (contains? (set v) (- target n))))
+        ;(not (every? false? (map contains-sum-compl?)))
+        ;
+        ;contains-sum-complement?-s (map #(and (not (nil? %))
+        ;                                      (not= % (- target %))
+        ;                                      (contains? (set v) (- target %)))
+        ;                                v)
+        ]
+    sum-complement-sets)
+  #_(->> v
+         (map #(and (not (nil? %))
+                    (not= % (- target %))
+                    (contains? (set v) (- target %))))
+         ;(every? false?)
+         ;not
+         ))
+
 (defn any-two-sum-equals-target?
   "check if sum of any of the two numbers in v equals to given target"
   [v target]
   (not (every? false? (map #(and (not (nil? %))
                                  (not= % (- target %))
-                                 (contains? (set v) (- target %))) v))))
+                                 (contains? (set v) (- target %)))
+                           v))))
 
 (defn first-invalid-number
   "finds the first invalid number based on given preamble number of elements"
-  [input preamble]
+  [input preamble]                                          ;;collection arg to be last
   (loop [i      input
          v      (take preamble input)
          target (nth i preamble)]
@@ -99,7 +142,7 @@
 
 (defn find-contiguous-subvec
   "finds contiguous elements in given vec v starting with index i that sums up to target"
-  [v target i]
+  [v target i]                                              ;;collection arg to be last
   (loop [v1  v
          j   i
          sum 0]
@@ -111,7 +154,7 @@
       (when (= sum target)
         (subvec v i j)))))
 
-(defn ^:private encryption-weakness!
+(defn ^:private encryption-weakness!                        ;;TODO  no !
   "sum of max and min elements in given vec v"
   [v]
   (+ (apply min v)
@@ -146,10 +189,14 @@
   #_=> false
 
   (any-two-sum-equals-target? [2 3 4] 6)
-
-  (loop-recur-ex [2 3 4 5 6])
+  #_=> true
 
   (any-two-sum-equals-target? [2 3 2 1] 10)
+  #_=> false
+
+
+  (any-two-sum-equals-target? [2 3 2 1 7 9 12] 10)
+  #_=> false
 
   (first-invalid-number [35 20 15 25 47 40 62 55 65 95 102 117 150 182 127 219 299 277 309 576] 5)
   #_=> 127
@@ -179,5 +226,8 @@
 
   (part2 "resources/day9/aoc-input.txt")
   #_=> 36981213
+
+  ;; Key takeaways:
+  ;; 1. Delay the evaluation of lazy seq as deep as possible
 
   )
