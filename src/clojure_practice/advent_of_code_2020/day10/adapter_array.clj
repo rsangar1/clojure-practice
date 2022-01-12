@@ -104,7 +104,7 @@
          (partition 2 1)
          (map #(- (second %) (first %))))))
 
-(defn count-occurrence
+(defn count-occurrence                                      ;;frequencies
   [n v]
   (->> v
        (filter #(= % n))
@@ -134,8 +134,7 @@
              '(1 1 1)     4
              '(1 1 1 1)   7
              '(1 1 1 1 1) 11})
-       (apply *)))
-
+       (reduce *)))
 
 (defn part2
   [input-file-path]
@@ -151,6 +150,8 @@
   (input-str->data (slurp "resources/day10/sample-input.txt"))
   #_=> (16 10 15 5 1 11 7 19 6 12 4)
 
+  (sort `(16 10 15 5 1 11 7 19 6 12 4 0 22))
+
   (def sample-data (input-str->data (slurp "resources/day10/sample-input.txt")))
 
   (calculate-joltage-diffs 0 (+ (apply max sample-data) 3) sample-data)
@@ -158,6 +159,8 @@
 
   (count-occurrence 1 '(1 3 1 1 1 3 1 1 3 1 3 3))
   #_=> 7
+
+  (frequencies '(1 3 1 1 1 3 1 1 3 1 3 3))
 
   (count-occurrence 3 '(1 3 1 1 1 3 1 1 3 1 3 3))
   #_=> 5
