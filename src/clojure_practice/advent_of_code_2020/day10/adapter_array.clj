@@ -83,18 +83,26 @@
        str/split-lines
        (map #(Integer/parseInt %))))
 
+#_(defn calculate-joltage-diffs
+    [outlet-joltage device-joltage adapters-joltages]
+    (let [joltages        (vec (conj adapters-joltages outlet-joltage device-joltage))
+          joltages-count  (count joltages)
+          sorted-joltages (sort joltages)]
+      (loop [i     0
+             diffs []]
+        (if (>= i (dec joltages-count))
+          diffs
+          (recur (inc i)
+                 (conj diffs (- (nth sorted-joltages (inc i))
+                                (nth sorted-joltages i))))))))
+
 (defn calculate-joltage-diffs
   [outlet-joltage device-joltage adapters-joltages]
   (let [joltages        (vec (conj adapters-joltages outlet-joltage device-joltage))
-        joltages-count  (count joltages)
         sorted-joltages (sort joltages)]
-    (loop [i     0
-           diffs []]
-      (if (>= i (dec joltages-count))
-        diffs
-        (recur (inc i)
-               (conj diffs (- (nth sorted-joltages (inc i))
-                              (nth sorted-joltages i))))))))
+    (->> sorted-joltages
+         (partition 2 1)
+         (map #(- (second %) (first %))))))
 
 (defn count-occurrence
   [n v]
@@ -104,13 +112,39 @@
 
 (defn part1
   [input-file-path]
-  (let [input-str      (slurp input-file-path)
-        input-data     (input-str->data input-str)
-        outlet-rating  0
+  (let [input-str            (slurp input-file-path)
+        input-data           (input-str->data input-str)
+        outlet-rating        0
         device-adapter-jolts (+ (apply max input-data) 3)
-        jolt-diffs     (calculate-joltage-diffs outlet-rating device-adapter-jolts input-data)]
+        jolt-diffs           (calculate-joltage-diffs outlet-rating device-adapter-jolts input-data)]
     (* (count-occurrence 1 jolt-diffs)
        (count-occurrence 3 jolt-diffs))))
+
+
+;;;;PART-2;;;;;
+
+(defn count-possible-paths
+  [jolt-diffs]
+  (->> jolt-diffs
+       (partition-by identity)
+       (map #(filter #{1} %))
+       (map {'()          1
+             '(1)         1
+             '(1 1)       2
+             '(1 1 1)     4
+             '(1 1 1 1)   7
+             '(1 1 1 1 1) 11})
+       (apply *)))
+
+
+(defn part2
+  [input-file-path]
+  (let [input-str            (slurp input-file-path)
+        input-data           (input-str->data input-str)
+        outlet-rating        0
+        device-adapter-jolts (+ (apply max input-data) 3)
+        jolt-diffs           (calculate-joltage-diffs outlet-rating device-adapter-jolts input-data)]
+    (count-possible-paths jolt-diffs)))
 
 (comment
 
@@ -120,12 +154,12 @@
   (def sample-data (input-str->data (slurp "resources/day10/sample-input.txt")))
 
   (calculate-joltage-diffs 0 (+ (apply max sample-data) 3) sample-data)
-  #_=> [1 3 1 1 1 3 1 1 3 1 3 3]
+  #_=> (1 3 1 1 1 3 1 1 3 1 3 3)
 
-  (count-occurrence 1 [1 3 1 1 1 3 1 1 3 1 3 3])
+  (count-occurrence 1 '(1 3 1 1 1 3 1 1 3 1 3 3))
   #_=> 7
 
-  (count-occurrence 3 [1 3 1 1 1 3 1 1 3 1 3 3])
+  (count-occurrence 3 '(1 3 1 1 1 3 1 1 3 1 3 3))
   #_=> 5
 
   (part1 "resources/day10/sample-input.txt")
@@ -137,6 +171,23 @@
   (part1 "resources/day10/input.txt")
   #_=> 1700
 
+
+  ;;part-2
+
+  (partition-by identity '(1 3 1 1 1 3 1 1 3 1 3 3))
+  #_=> ((1) (3) (1 1 1) (3) (1 1) (3) (1) (3 3))
+
+  (count-possible-paths '(1 3 1 1 1 3 1 1 3 1 3 3))
+  #_=> 8
+
+  (part2 "resources/day10/sample-input.txt")
+  #_=> 8
+
+  (part2 "resources/day10/larger-sample-input.txt")
+  #_=> 19208
+
+  (part2 "resources/day10/input.txt")
+  #_=> 12401793332096
 
   )
 
