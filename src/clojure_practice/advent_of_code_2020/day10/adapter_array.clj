@@ -83,19 +83,6 @@
        str/split-lines
        (map #(Integer/parseInt %))))
 
-#_(defn calculate-joltage-diffs
-    [outlet-joltage device-joltage adapters-joltages]
-    (let [joltages        (vec (conj adapters-joltages outlet-joltage device-joltage))
-          joltages-count  (count joltages)
-          sorted-joltages (sort joltages)]
-      (loop [i     0
-             diffs []]
-        (if (>= i (dec joltages-count))
-          diffs
-          (recur (inc i)
-                 (conj diffs (- (nth sorted-joltages (inc i))
-                                (nth sorted-joltages i))))))))
-
 (defn calculate-joltage-diffs
   [outlet-joltage device-joltage adapters-joltages]
   (let [joltages        (vec (conj adapters-joltages outlet-joltage device-joltage))
