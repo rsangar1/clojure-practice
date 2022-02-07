@@ -27,22 +27,12 @@
 
 (defn change-current-seat-state
   [index previous-row current-row next-row]
-  (let [begin-index            (if (= index 0)
-                                 index
-                                 (dec index))
-        end-index              (if (= index (dec (count current-row)))
-                                 (inc index)
-                                 (+ index 2))
-        previous-row-adj-seats (if (= "" previous-row)
-                                 ""
-                                 (subs previous-row begin-index end-index))
-        next-row-adj-seats     (if (= "" next-row)
-                                 ""
-                                 (subs next-row begin-index end-index))
+  (let [begin-index            (dec index)
+        end-index              (+ index 2)
         ;_                      (println begin-index end-index previous-row-adj-seats (subs current-row begin-index end-index) next-row-adj-seats)
-        adj-seats-occupancy    (count-seats-by-occupancy [previous-row-adj-seats
+        adj-seats-occupancy    (count-seats-by-occupancy [(subs previous-row begin-index end-index)
                                                           (subs current-row begin-index end-index)
-                                                          next-row-adj-seats])
+                                                          (subs next-row begin-index end-index)])
         ;_                      (println adj-seats-occupancy)
         ]
     (cond (= \L (nth current-row index)) (if (can-seat-become-occupied? adj-seats-occupancy)
@@ -56,30 +46,28 @@
 
 (defn adjust-seat-layout*
   [previous-row current-row next-row]
-  (loop [index  0
-         result []]
-    (if (= index (count current-row))
-      (apply str result)
+  (loop [index  1
+         result [" "]]
+    (if (= index (dec (count current-row)))
+      (apply str (conj result " "))
       (recur (inc index)
              (conj result (change-current-seat-state index previous-row current-row next-row))))))
 
 (defn adjust-seat-layout
   [seat-rows]
-  (loop [index        0
-         previous-row ""
+  (loop [index        1
+         previous-row (nth seat-rows (dec index))
          current-row  (nth seat-rows index)
          next-row     (nth seat-rows (inc index))
-         result       []]
+         result       [(first seat-rows)]]
     ;(println index (count seat-rows) previous-row current-row next-row)
     ;(println "after re-assigning each index =" index "row =" current-row "result =" result)
-    (if (= index (dec (count seat-rows)))
-      (conj result (adjust-seat-layout* previous-row current-row next-row))
+    (if (= index (- (count seat-rows) 2))
+      (conj (conj result (adjust-seat-layout* previous-row current-row next-row)) (last seat-rows))
       (recur (inc index)
              current-row
              next-row
-             (if (< index (- (count seat-rows) 2))
-               (nth seat-rows (+ index 2))
-               "")
+             (nth seat-rows (+ index 2))
              (conj result (adjust-seat-layout* previous-row current-row next-row))))))
 
 (defn find-stable-seating-layout
@@ -93,12 +81,27 @@
       (recur new-seats-layout
              (adjust-seat-layout new-seats-layout)))))
 
+(defn build-grid
+  [input-data]
+  (let [input     (->> input-data
+                       (mapv #(str " " % " ")))
+        row-len   (count (first input))
+        empty-row (apply str (repeat row-len " "))]
+    (loop [index  0
+           result [empty-row]]
+      (if (= index (count input))
+        (conj result empty-row)
+        (recur (inc index)
+               (conj result (nth input index)))))))
+
 (defn part1
   [input-file-path]
   (let [input-str             (slurp input-file-path)
         input-data            (input-str->data input-str)
+        grid                  (build-grid input-data)
+        ;_                     (println "grid: " grid)
         ;_                     (println "input data: " input-data)
-        stable-seating-layout (find-stable-seating-layout input-data)
+        stable-seating-layout (find-stable-seating-layout grid)
         final-occupancy-count (count-seats-by-occupancy stable-seating-layout)
         ;_                     (println "final occupancy layout" final-occupancy-count)
         ]
@@ -197,6 +200,7 @@
      ["#.#L.L#.##" "#LLL#LL.L#" "L.#.L..#.." "#L##.##.L#" "#.#L.LL.LL" "#.#L#L#.##" "..L.L....." "#L#L##L#L#" "#.LLLLLL.L" "#.#L#L#.##"])
 
   (time (part1 "resources/day11/input.txt"))
+  #_=> 2263
 
   (input-str->data (slurp "resources/day11/input.txt"))
 
