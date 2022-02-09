@@ -49,7 +49,7 @@
   [seats [row column]]
   (map #(seat-status seats %) (get-neighbor-indices row column)))
 
-(defn adjust-seat-status
+#_(defn adjust-seat-status
   "adjust a particular seat status based on occupancy rules"
   [seats row column]
   (let [current-seat-status      (nth (nth seats row) column)
@@ -134,6 +134,38 @@
       (recur (row-fn current-row)
              (column-fn current-column)
              (seat-status seats [current-row current-column])))))
+
+(defn find-all-first-neighbor-seats
+  [seats [row column]]
+  (map #(find-first-neighbor-seat seats [row column] %) neighbor-indices))
+
+(defn adjust-seat-status
+  "adjust a particular seat status based on occupancy rules"
+  [seats row column]
+  (let [current-seat-status      (nth (nth seats row) column)
+        neighbor-seats-status    (find-all-first-neighbor-seats seats [row column])
+        neighbor-seats-occupancy (frequencies neighbor-seats-status)]
+    (cond (= current-seat-status \L) (if (can-seat-become-occupied? neighbor-seats-occupancy)
+                                       \#
+                                       \L)
+          (= current-seat-status \#) (if (can-seat-become-empty? neighbor-seats-occupancy 5)
+                                       \L
+                                       \#)
+          (= current-seat-status \.) \.
+          :else current-seat-status)))
+
+
+(defn part2
+  [input-file-path]
+  (let [input-str             (slurp input-file-path)
+        input-data            (input-str->data input-str)
+
+        ;_                     (println "input data: " input-data)
+        stable-seating-layout (find-stable-seating-layout input-data)
+        final-occupancy-count (count-seats-by-occupancy stable-seating-layout)
+        ;_                     (println "final occupancy layout" final-occupancy-count)
+        ]
+    (get final-occupancy-count \#)))
 
 
 (comment
@@ -227,5 +259,34 @@
                              ".L.L.#.#.#.#."
                              "............."] [1 1] [identity inc])
   #_=> \L
+
+  (find-all-first-neighbor-seats input-data [3 3])
+  #_=> (\L \L \L \L \L \L \L \L)
+
+  (find-all-first-neighbor-seats [".......#."
+                                  "...#....."
+                                  ".#......."
+                                  "........."
+                                  "..#L....#"
+                                  "....#...."
+                                  "........."
+                                  "#........"
+                                  "...#....."] [4 3])
+  #_=> (\# \# \# \# \# \# \# \#)
+
+  (find-all-first-neighbor-seats ["............."
+                                  ".L.L.#.#.#.#."
+                                  "............."] [1 1])
+  #_=> (\. \. \. \. \L \. \. \.)
+
+  (adjust-seat-status input-data 1 2)
+  #_=> \#
+
+  (part2 "resources/day11/sample-input.txt")
+  #_=> 26
+
+  (part2 "resources/day11/input.txt")
+  #_=> 2002
+
 
   )
