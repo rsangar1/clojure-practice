@@ -28,8 +28,8 @@
 
 (defn get-neighbor-indices
   "neighbors for a given row and column"
-  [row, column]
-  (map (fn [[row-fn, column-fn]]
+  [row column]
+  (map (fn [[row-fn column-fn]]
          [(row-fn row) (column-fn column)])
        neighbor-indices))
 
@@ -44,27 +44,27 @@
                (< column (count seat-row)))
       (nth seat-row column))))
 
-(defn get-neighbor-seats-status
+(defn neighbor-seats-status
   "current status of all neighboring seats"
   [seats [row column]]
   (map #(seat-status seats %) (get-neighbor-indices row column)))
 
-#_(defn adjust-seat-status
-  "adjust a particular seat status based on occupancy rules"
-  [seats row column]
-  (let [current-seat-status      (nth (nth seats row) column)
-        neighbor-seats-status    (get-neighbor-seats-status seats [row column])
-        neighbor-seats-occupancy (frequencies neighbor-seats-status)]
-    (cond (= current-seat-status \L) (if (can-seat-become-occupied? neighbor-seats-occupancy)
-                                       \#
-                                       \L)
-          (= current-seat-status \#) (if (can-seat-become-empty? neighbor-seats-occupancy 4)
-                                       \L
-                                       \#)
-          (= current-seat-status \.) \.
-          :else current-seat-status)))
+#_(defn seat-status
+    "adjust a particular seat status based on occupancy rules"
+    [seats row column]
+    (let [current-seat-status      (nth (nth seats row) column)
+          neighbor-seats-status    (neighbor-seats-status seats [row column])
+          neighbor-seats-occupancy (frequencies neighbor-seats-status)]
+      (cond (= current-seat-status \L) (if (can-seat-become-occupied? neighbor-seats-occupancy)
+                                         \#
+                                         \L)
+            (= current-seat-status \#) (if (can-seat-become-empty? neighbor-seats-occupancy 4)
+                                         \L
+                                         \#)
+            (= current-seat-status \.) \.
+            :else current-seat-status)))
 
-(defn adjust-seat-row-status
+(defn seat-row-status
   "adjust seat status of current row"
   [seats row]
   (let [current-row (nth seats row)]
@@ -75,7 +75,7 @@
         (recur (inc column)
                (conj updated-row (adjust-seat-status seats row column)))))))
 
-(defn adjust-seats-status
+(defn seats-status
   "adjust status of all seats"
   [seats]
   (loop [row           0
@@ -83,7 +83,7 @@
     (if (= row (count seats))
       updated-seats
       (recur (inc row)
-             (conj updated-seats (adjust-seat-row-status seats row))))))
+             (conj updated-seats (seat-row-status seats row))))))
 
 (defn ^:private count-seats-by-occupancy
   [seats]
@@ -95,13 +95,13 @@
   "adjust seats status until a stable layout is obtained"
   [seats]
   (loop [current-seats-layout seats
-         new-seats-layout     (adjust-seats-status current-seats-layout)]
+         new-seats-layout     (seats-status current-seats-layout)]
     ;(println "current-seats-layout: " current-seats-layout)
     ;(println "new-seats-layout: " new-seats-layout)
     (if (= new-seats-layout current-seats-layout)
       new-seats-layout
       (recur new-seats-layout
-             (adjust-seats-status new-seats-layout)))))
+             (seats-status new-seats-layout)))))
 
 (defn part1
   [input-file-path]
@@ -118,7 +118,7 @@
 
 ;;;;;;;; PART-2 ;;;;;;;;;
 
-(defn find-first-neighbor-seat
+(defn first-neighbor-seat
   "find first seat from given seat using the row-fn and column-fn"
   [seats [row column] [row-fn column-fn]]
   (loop [current-row    (row-fn row)
@@ -135,15 +135,15 @@
              (column-fn current-column)
              (seat-status seats [current-row current-column])))))
 
-(defn find-all-first-neighbor-seats
+(defn all-first-neighbor-seats
   [seats [row column]]
-  (map #(find-first-neighbor-seat seats [row column] %) neighbor-indices))
+  (map #(first-neighbor-seat seats [row column] %) neighbor-indices))
 
-(defn adjust-seat-status
+(defn seat-status
   "adjust a particular seat status based on occupancy rules"
   [seats row column]
   (let [current-seat-status      (nth (nth seats row) column)
-        neighbor-seats-status    (find-all-first-neighbor-seats seats [row column])
+        neighbor-seats-status    (all-first-neighbor-seats seats [row column])
         neighbor-seats-occupancy (frequencies neighbor-seats-status)]
     (cond (= current-seat-status \L) (if (can-seat-become-occupied? neighbor-seats-occupancy)
                                        \#
@@ -194,19 +194,25 @@
   (seat-status input-data [2 3])
   #_=> \.
 
-  (get-neighbor-seats-status input-data [2 3])
+  (neighbor-seats-status input-data [2 3])
   #_=> (\L \L \L \L \L \L \L \.)
 
-  (get-neighbor-seats-status input-data [0 0])
+  (neighbor-seats-status input-data [0 0])
   #_=> (nil nil nil nil \. nil \L \L)
 
-  (adjust-seat-status input-data 0 0)
+  (can-seat-become-occupied? (frequencies `(nil nil nil nil \. nil \L \L)))
+  #_=> true
+
+  (can-seat-become-empty? '(\L \L \L \L \L \L \L \.) 4)
+  #_=> false
+
+  (seat-status input-data 0 0)
   #_=> \#
 
-  (adjust-seat-row-status input-data 1)
+  (seat-row-status input-data 1)
   #_=> "#######.##"
 
-  (adjust-seats-status input-data)
+  (seats-status input-data)
   #_=> ["#.##.##.##"
         "#######.##"
         "#.#.#..#.."
@@ -244,7 +250,26 @@
 
 
   ;;; PART-2 ;;;
-  (find-first-neighbor-seat [".......#."
+  (first-neighbor-seat [".......#."
+                        "...#....."
+                        ".#......."
+                        "........."
+                        "..#L....#"
+                        "....#...."
+                        "........."
+                        "#........"
+                        "...#....."] [4 3] [dec identity])
+  #_=> \#
+
+  (first-neighbor-seat ["............."
+                        ".L.L.#.#.#.#."
+                        "............."] [1 1] [identity inc])
+  #_=> \L
+
+  (all-first-neighbor-seats input-data [3 3])
+  #_=> (\L \L \L \L \L \L \L \L)
+
+  (all-first-neighbor-seats [".......#."
                              "...#....."
                              ".#......."
                              "........."
@@ -252,34 +277,15 @@
                              "....#...."
                              "........."
                              "#........"
-                             "...#....."] [4 3] [dec identity])
-  #_=> \#
-
-  (find-first-neighbor-seat ["............."
-                             ".L.L.#.#.#.#."
-                             "............."] [1 1] [identity inc])
-  #_=> \L
-
-  (find-all-first-neighbor-seats input-data [3 3])
-  #_=> (\L \L \L \L \L \L \L \L)
-
-  (find-all-first-neighbor-seats [".......#."
-                                  "...#....."
-                                  ".#......."
-                                  "........."
-                                  "..#L....#"
-                                  "....#...."
-                                  "........."
-                                  "#........"
-                                  "...#....."] [4 3])
+                             "...#....."] [4 3])
   #_=> (\# \# \# \# \# \# \# \#)
 
-  (find-all-first-neighbor-seats ["............."
-                                  ".L.L.#.#.#.#."
-                                  "............."] [1 1])
+  (all-first-neighbor-seats ["............."
+                             ".L.L.#.#.#.#."
+                             "............."] [1 1])
   #_=> (\. \. \. \. \L \. \. \.)
 
-  (adjust-seat-status input-data 1 2)
+  (seat-status input-data 1 2)
   #_=> \#
 
   (part2 "resources/day11/sample-input.txt")
@@ -287,6 +293,5 @@
 
   (part2 "resources/day11/input.txt")
   #_=> 2002
-
 
   )
