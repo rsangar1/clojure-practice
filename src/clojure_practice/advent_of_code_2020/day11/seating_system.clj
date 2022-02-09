@@ -10,13 +10,6 @@
   (->> input-str
        str/split-lines))
 
-
-(defn ^:private count-seats-by-occupancy
-  [seats]
-  (->> seats
-       (map frequencies)
-       (apply merge-with +)))
-
 (defn can-seat-become-occupied?
   [neighbor-seats-occupancy-map]
   (nil? (get neighbor-seats-occupancy-map \#)))
@@ -26,15 +19,19 @@
   (and (not (nil? (get neighbor-seats-occupancy-map \#)))
        (>= (get neighbor-seats-occupancy-map \#) occupied-seats-count)))
 
+#_[(row-1, column-1) (row-1, column) (row-1, column+1)
+   (row, column-1) (row, column+1)
+   (row+1, column-1) (row+1, column) (row+1, column+1)]
+(def neighbor-indices [[dec dec] [dec identity] [dec inc]
+                       [identity dec] [identity inc]
+                       [inc dec] [inc identity] [inc inc]])
+
 (defn get-neighbor-indices
-  "neighbors for a given row and column
-  [(row-1, column-1) (row-1, column) (row-1, column+1)
-   (row, column-1)                   (row, column+1)
-   (row+1, column-1) (row+1, column) (row+1, column+1)]"
+  "neighbors for a given row and column"
   [row, column]
-  [[(dec row) (dec column)] [(dec row) column] [(dec row) (inc column)]
-   [row (dec column)] [row, (inc column)]
-   [(inc row) (dec column)] [(inc row) column] [(inc row) (inc column)]])
+  (map (fn [[row-fn, column-fn]]
+         [(row-fn row) (column-fn column)])
+       neighbor-indices))
 
 (defn seat-status
   "get status of current seat"
@@ -55,16 +52,16 @@
 (defn adjust-seat-status
   "adjust a particular seat status based on occupancy rules"
   [seats row column]
-  (let [current-seat-status (nth (nth seats row) column)
-        neighbor-seats-status (get-neighbor-seats-status seats [row column])
-        neighbor-seats-occupany (frequencies neighbor-seats-status)]
-    (cond (= current-seat-status \L) (if (can-seat-become-occupied? neighbor-seats-occupany)
+  (let [current-seat-status      (nth (nth seats row) column)
+        neighbor-seats-status    (get-neighbor-seats-status seats [row column])
+        neighbor-seats-occupancy (frequencies neighbor-seats-status)]
+    (cond (= current-seat-status \L) (if (can-seat-become-occupied? neighbor-seats-occupancy)
                                        \#
                                        \L)
-          (= current-seat-status \#) (if (can-seat-become-empty? neighbor-seats-occupany 4)
-                                      \L
-                                      \#)
-          (=  current-seat-status \.) \.
+          (= current-seat-status \#) (if (can-seat-become-empty? neighbor-seats-occupancy 4)
+                                       \L
+                                       \#)
+          (= current-seat-status \.) \.
           :else current-seat-status)))
 
 (defn adjust-seat-row-status
@@ -81,12 +78,18 @@
 (defn adjust-seats-status
   "adjust status of all seats"
   [seats]
-  (loop [row 0
+  (loop [row           0
          updated-seats []]
     (if (= row (count seats))
       updated-seats
       (recur (inc row)
              (conj updated-seats (adjust-seat-row-status seats row))))))
+
+(defn ^:private count-seats-by-occupancy
+  [seats]
+  (->> seats
+       (map frequencies)
+       (apply merge-with +)))
 
 (defn find-stable-seating-layout
   "adjust seats status until a stable layout is obtained"
@@ -104,13 +107,33 @@
   [input-file-path]
   (let [input-str             (slurp input-file-path)
         input-data            (input-str->data input-str)
-        grid                  (build-grid input-data)
+
         ;_                     (println "input data: " input-data)
         stable-seating-layout (find-stable-seating-layout input-data)
         final-occupancy-count (count-seats-by-occupancy stable-seating-layout)
         ;_                     (println "final occupancy layout" final-occupancy-count)
         ]
     (get final-occupancy-count \#)))
+
+
+;;;;;;;; PART-2 ;;;;;;;;;
+
+(defn find-first-neighbor-seat
+  "find first seat from given seat using the row-fn and column-fn"
+  [seats [row column] [row-fn column-fn]]
+  (loop [current-row    (row-fn row)
+         current-column (column-fn column)
+         seat           nil]
+    ;(println "current-row:" current-row "current-column:" current-column "seat:" seat)
+    (if (or (and (not (nil? seat)) (not= seat \.))
+            (< current-row 0)
+            (>= current-row (count seats))
+            (< current-column 0)
+            (>= current-column (count (nth seats row))))
+      seat
+      (recur (row-fn current-row)
+             (column-fn current-column)
+             (seat-status seats [current-row current-column])))))
 
 
 (comment
@@ -130,7 +153,7 @@
     (def input-data (input-str->data (slurp "resources/day11/sample-input.txt")))
     (println input-data))
 
-  (get-neighbor-indices 0 0)
+  (get-neighbor-indices 3 4)
   #_=> [[2 3] [2 4] [2 5] [3 3] [3 5] [4 3] [4 4] [4 5]]
 
   (get-neighbor-indices 0 0)
@@ -152,16 +175,16 @@
   #_=> "#######.##"
 
   (adjust-seats-status input-data)
-  #_ => ["#.##.##.##"
-         "#######.##"
-         "#.#.#..#.."
-         "####.##.##"
-         "#.##.##.##"
-         "#.#####.##"
-         "..#.#....."
-         "##########"
-         "#.######.#"
-         "#.#####.##"]
+  #_=> ["#.##.##.##"
+        "#######.##"
+        "#.#.#..#.."
+        "####.##.##"
+        "#.##.##.##"
+        "#.#####.##"
+        "..#.#....."
+        "##########"
+        "#.######.#"
+        "#.#####.##"]
 
   (find-stable-seating-layout input-data)
   #_=> ["#.#L.L#.##"
@@ -175,10 +198,34 @@
         "#.LLLLLL.L"
         "#.#L#L#.##"]
 
+  (count-seats-by-occupancy input-data)
+  #_=> {\L 71, \. 29}
+
+  (count-seats-by-occupancy (find-stable-seating-layout input-data))
+  #_=> {\# 37, \. 29, \L 34}
+
   (part1 "resources/day11/sample-input.txt")
   #_=> 37
 
   (part1 "resources/day11/input.txt")
   #_=> 2263
+
+
+  ;;; PART-2 ;;;
+  (find-first-neighbor-seat [".......#."
+                             "...#....."
+                             ".#......."
+                             "........."
+                             "..#L....#"
+                             "....#...."
+                             "........."
+                             "#........"
+                             "...#....."] [4 3] [dec identity])
+  #_=> \#
+
+  (find-first-neighbor-seat ["............."
+                             ".L.L.#.#.#.#."
+                             "............."] [1 1] [identity inc])
+  #_=> \L
 
   )
