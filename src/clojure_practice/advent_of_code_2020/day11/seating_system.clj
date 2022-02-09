@@ -18,16 +18,18 @@
        (apply merge-with +)))
 
 (defn can-seat-become-occupied?
-  [adj-seats-occupancy-map]
-  (nil? (get adj-seats-occupancy-map \#)))
+  [neighbor-seats-occupancy-map]
+  (nil? (get neighbor-seats-occupancy-map \#)))
 
 (defn can-seat-become-empty?
-  [adj-seats-occupancy-map]
-  (>= (get adj-seats-occupancy-map \#) 5))
+  [neighbor-seats-occupancy-map occupied-seats-count]
+  (and (not (nil? (get neighbor-seats-occupancy-map \#)))
+       (>= (get neighbor-seats-occupancy-map \#) occupied-seats-count)))
 
-(defn change-current-seat-state
+#_(defn change-current-seat-state
   [index previous-row current-row next-row]
-  (let [begin-index            (dec index)
+  (let [current-seat-status (nth current-row index)
+        begin-index            (dec index)
         end-index              (+ index 2)
         ;_                      (println begin-index end-index previous-row-adj-seats (subs current-row begin-index end-index) next-row-adj-seats)
         adj-seats-occupancy    (count-seats-by-occupancy [(subs previous-row begin-index end-index)
@@ -35,16 +37,16 @@
                                                           (subs next-row begin-index end-index)])
         ;_                      (println adj-seats-occupancy)
         ]
-    (cond (= \L (nth current-row index)) (if (can-seat-become-occupied? adj-seats-occupancy)
+    (cond (= current-seat-status \L) (if (can-seat-become-occupied? adj-seats-occupancy)
                                            \#
                                            \L)
-          (= \# (nth current-row index)) (if (can-seat-become-empty? adj-seats-occupancy)
+          (= current-seat-status \#) (if (can-seat-become-empty? adj-seats-occupancy)
                                            \L
                                            \#)
-          (= \. (nth current-row index)) \.
-          :else (nth current-row index))))
+          (=  current-seat-status \.) \.
+          :else current-seat-status)))
 
-(defn adjust-seat-layout*
+#_(defn adjust-seat-layout*
   [previous-row current-row next-row]
   (loop [index  1
          result [" "]]
@@ -53,7 +55,7 @@
       (recur (inc index)
              (conj result (change-current-seat-state index previous-row current-row next-row))))))
 
-(defn adjust-seat-layout
+#_(defn adjust-seat-layout
   [seat-rows]
   (loop [index        1
          previous-row (nth seat-rows (dec index))
@@ -70,16 +72,78 @@
              (nth seat-rows (+ index 2))
              (conj result (adjust-seat-layout* previous-row current-row next-row))))))
 
+(defn get-neighbor-indices
+  "neighbors for a given row and column
+  [(row-1, column-1) (row-1, column) (row-1, column+1)
+   (row, column-1)                   (row, column+1)
+   (row+1, column-1) (row+1, column) (row+1, column+1)]"
+  [row, column]
+  [[(dec row) (dec column)] [(dec row) column] [(dec row) (inc column)]
+   [row (dec column)] [row, (inc column)]
+   [(inc row) (dec column)] [(inc row) column] [(inc row) (inc column)]])
+
+(defn seat-status
+  [seats [row column]]
+  (let [seat-row (when (and (>= row 0)
+                            (< row (count seats)))
+                   (nth seats row))]
+    (when (and (not (nil? seat-row))
+               (>= column 0)
+               (< column (count seat-row)))
+      (nth seat-row column))))
+
+(defn get-neighbor-seats-status
+  "current status of all neighboring seats"
+  [seats [row column]]
+  (map #(seat-status seats %) (get-neighbor-indices row column)))
+
+(defn adjust-seat-status
+  "adjust a particular seat status based on occupancy rules"
+  [seats row column]
+  (let [current-seat-status (nth (nth seats row) column)
+        neighbor-seats-status (get-neighbor-seats-status seats [row column])
+        neighbor-seats-occupany (frequencies neighbor-seats-status)]
+    (cond (= current-seat-status \L) (if (can-seat-become-occupied? neighbor-seats-occupany)
+                                       \#
+                                       \L)
+          (= current-seat-status \#) (if (can-seat-become-empty? neighbor-seats-occupany 4)
+                                      \L
+                                      \#)
+          (=  current-seat-status \.) \.
+          :else current-seat-status)))
+
+(defn adjust-seat-row-status
+  "adjust seat status of current row"
+  [seats row]
+  (let [current-row (nth seats row)]
+    (loop [column      0
+           updated-row []]
+      (if (= column (count current-row))
+        (apply str updated-row)
+        (recur (inc column)
+               (conj updated-row (adjust-seat-status seats row column)))))))
+
+(defn adjust-seats-status
+  "adjust status of all seats"
+  [seats]
+  (loop [row 0
+         updated-seats []]
+    (if (= row (count seats))
+      updated-seats
+      (recur (inc row)
+             (conj updated-seats (adjust-seat-row-status seats row))))
+    ))
+
 (defn find-stable-seating-layout
   [input-data]
   (loop [current-seats-layout input-data
-         new-seats-layout     (adjust-seat-layout current-seats-layout)]
+         new-seats-layout     (adjust-seats-status current-seats-layout)]
     ;(println "current-seats-layout: " current-seats-layout)
     ;(println "new-seats-layout: " new-seats-layout)
     (if (= new-seats-layout current-seats-layout)
       new-seats-layout
       (recur new-seats-layout
-             (adjust-seat-layout new-seats-layout)))))
+             (adjust-seats-status new-seats-layout)))))
 
 (defn build-grid
   [input-data]
@@ -101,7 +165,7 @@
         grid                  (build-grid input-data)
         ;_                     (println "grid: " grid)
         ;_                     (println "input data: " input-data)
-        stable-seating-layout (find-stable-seating-layout grid)
+        stable-seating-layout (find-stable-seating-layout input-data)
         final-occupancy-count (count-seats-by-occupancy stable-seating-layout)
         ;_                     (println "final occupancy layout" final-occupancy-count)
         ]
@@ -203,5 +267,56 @@
   #_=> 2263
 
   (input-str->data (slurp "resources/day11/input.txt"))
+
+  (get-neighbor-indices 0 0)
+  #_=> [[2 3] [2 4] [2 5] [3 3] [3 5] [4 3] [4 4] [4 5]]
+
+  (get-neighbor-indices 0 0)
+  #_=> [[-1 -1] [-1 0] [-1 1] [0 -1] [0 1] [1 -1] [1 0] [1 1]]
+
+  (seat-status input-data [2 3])
+  #_=> \.
+
+  (get-neighbor-seats-status input-data [2 3])
+  #_=> (\L \L \L \L \L \L \L \.)
+
+  (get-neighbor-seats-status input-data [0 0])
+  #_=> (nil nil nil nil \. nil \L \L)
+
+  (adjust-seat-status input-data 0 0)
+  #_=> \#
+
+  (adjust-seat-row-status input-data 1)
+  #_=> "#######.##"
+
+  (adjust-seats-status input-data)
+  #_ => ["#.##.##.##"
+         "#######.##"
+         "#.#.#..#.."
+         "####.##.##"
+         "#.##.##.##"
+         "#.#####.##"
+         "..#.#....."
+         "##########"
+         "#.######.#"
+         "#.#####.##"]
+
+  (find-stable-seating-layout input-data)
+  #_=> ["#.#L.L#.##"
+        "#LLL#LL.L#"
+        "L.#.L..#.."
+        "#L##.##.L#"
+        "#.#L.LL.LL"
+        "#.#L#L#.##"
+        "..L.L....."
+        "#L#L##L#L#"
+        "#.LLLLLL.L"
+        "#.#L#L#.##"]
+
+  (part1 "resources/day11/sample-input.txt")
+  #_=> 37
+
+  (part1 "resources/day11/input.txt")
+  #_=> 2263
 
   )
