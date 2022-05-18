@@ -1,14 +1,18 @@
 # clojure-practice
 
-Clojure practice by solving problems...
+Practicing Clojure by solving problems...
 
 ## Usage
-
-FIXME
+* Clone or fork the repository to your local using `git clone` command or github desktop app.
+* Setup Leiningen setup with IntelliJ using Cursive plugin (need license) or VS Code with Calva plugin (open source)
+* Open cloned/forked repo on IntelliJ or VS Code
+* Start REPL by right-clicking on project.clj (make sure JDK is setup for the project)
+* Load a corresponding file and run the functions (refer to keyboard shortcuts for Cursive or Calva on Google)
+* Send a message for any help.
 
 ## License
-
-Copyright © 2021 FIXME
+FIXME
+Copyright © 2021 
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License 2.0 which is available at
