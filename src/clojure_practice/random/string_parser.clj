@@ -1,4 +1,4 @@
-(ns clojure-practice.leetcode.string-parser
+(ns clojure-practice.random.string-parser
   (:require [clojure.spec.alpha :as s]
             [clojure.spec.test.alpha :as st]
             [clojure.string :as str]))
@@ -77,6 +77,9 @@
 
   (str->map "status")
   #_=> {}
+
+  (str->map "status:321;asbace")
+  #_=> {:status "321"}
 
   )
 
