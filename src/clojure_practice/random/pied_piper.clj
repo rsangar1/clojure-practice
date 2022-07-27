@@ -42,10 +42,9 @@
 
 (defn parse
   [rats-piper-str]
-  (let [input-str-with-no-spaces     (str/replace rats-piper-str " " "")
+  (let [input-str-with-no-spaces (str/replace rats-piper-str " " "")
         [left-rats right-rats] (str/split input-str-with-no-spaces #"P" -1)]
-    [left-rats right-rats])
-  )
+    [left-rats right-rats]))
 
 (defn deaf-rats-count
   [[left-rats right-rats]]
