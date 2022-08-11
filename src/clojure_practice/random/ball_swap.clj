@@ -19,39 +19,45 @@
     (cond (some #(= % ball-position) swap-positions) (first (filter #(not= % ball-position) swap-positions))
           :else ball-position))
 
-(defn new-ball-position
-  [swap-positions ball-position]
-  (if (some #(= % ball-position) swap-positions)
+#_(defn swapped-ball-position
+  [cup-positions ball-position]
+  (if (some #(= % ball-position) cup-positions)
     (first (filter #(not= % ball-position)
-                   swap-positions))
+                   cup-positions))
     ball-position))
 
-(defn ball-positions
-  [cup-swaps initial-ball-position]
-  (loop [[swap & rem-swaps] cup-swaps
+(defn swapped-ball-position
+  [[cup1 cup2] ball-cup]
+  (cond (= cup1 ball-cup) cup2
+        (= cup2 ball-cup) cup1
+        :else ball-cup))
+
+(defn swapped-ball-position-s
+  [cups-swap-s initial-ball-position]
+  (loop [[cups-swap & rem-cup-swaps] cups-swap-s
          ball-position  initial-ball-position
          ball-positions []]
-    (if swap
-      (let [new-ball-position (new-ball-position (vec swap) ball-position)]
-        (recur rem-swaps
+    (if cups-swap
+      (let [new-ball-position (swapped-ball-position cups-swap ball-position)]
+        (recur rem-cup-swaps
                new-ball-position
                (conj ball-positions new-ball-position)))
       ball-positions)))
 
 (defn swap-cups
-  [cup-swaps]
-  (-> (ball-positions cup-swaps \B)
-      last))
+  [swap-s]
+  (let [cups-swap-s (map vec swap-s)]
+    (last (swapped-ball-position-s cups-swap-s \B))))
 
 
 (comment
   (def cup-swaps-input ["AB" "CA"])
   (def initial-ball-position \B)
 
-  (new-ball-position (vec (first cup-swaps-input)) initial-ball-position)
+  (swapped-ball-position (vec (first cup-swaps-input)) initial-ball-position)
   #_=> \A
 
-  (ball-positions cup-swaps-input \B)
+  (swapped-ball-position-s cup-swaps-input \B)
   #_=> [\A \C]
 
   (swap-cups cup-swaps-input)
@@ -60,6 +66,11 @@
   (def input-list [["AB" "CA"]
                    ["AC" "CA" "CA" "AC"]
                    ["BA" "AC" "CA" "BC"]])
+
+  (map #(swapped-ball-position-s % initial-ball-position) input-list)
+  #_=> ([\A \C]
+        [\B \B \B \B]
+        [\A \C \A \A])
 
   (map swap-cups input-list)
   #_=> (\C \B \A)
