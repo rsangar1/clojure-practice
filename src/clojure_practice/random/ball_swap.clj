@@ -20,11 +20,11 @@
           :else ball-position))
 
 #_(defn swapped-ball-position
-  [cup-positions ball-position]
-  (if (some #(= % ball-position) cup-positions)
-    (first (filter #(not= % ball-position)
-                   cup-positions))
-    ball-position))
+    [cup-positions ball-position]
+    (if (some #(= % ball-position) cup-positions)
+      (first (filter #(not= % ball-position)
+                     cup-positions))
+      ball-position))
 
 (defn swapped-ball-position
   [[cup1 cup2] ball-cup]
@@ -34,12 +34,12 @@
 
 (defn swapped-ball-position-s
   [cups-swap-s initial-ball-position]
-  (loop [[cups-swap & rem-cup-swaps] cups-swap-s
+  (loop [[cups-swap & rem-cups-swaps] cups-swap-s
          ball-position  initial-ball-position
          ball-positions []]
     (if cups-swap
       (let [new-ball-position (swapped-ball-position cups-swap ball-position)]
-        (recur rem-cup-swaps
+        (recur rem-cups-swaps
                new-ball-position
                (conj ball-positions new-ball-position)))
       ball-positions)))
