@@ -14,19 +14,22 @@
    \n \s
    \s \n})
 
-;;more readable?
-(defn return-path1
-  [path]
-  (->> path
-       reverse
-       (map (fn [direction]
-              (get opposite-directions direction)))))
-
 (defn return-path
   [path]
   (->> path
        rseq
        (map #(opposite-directions %))))
+
+;;more readable?
+#_(map (fn [direction]
+         (get opposite-directions direction)))
+
+(defn return-path1
+  [path]
+  (reduce (fn [r-path direction]
+            (conj r-path (opposite-directions direction)))
+          '()
+          path))
 
 (comment
   (return-path [\n \e \w \n \e \s])
