@@ -18,11 +18,14 @@
   [path]
   (->> path
        rseq
-       (map #(opposite-directions %))))
+       (map opposite-directions)))
 
 ;;more readable?
-#_(map (fn [direction]
-         (get opposite-directions direction)))
+#_(->> path
+       rseq
+       (map (fn [direction]
+              (get opposite-directions direction))))
+
 
 (defn return-path1
   [path]
