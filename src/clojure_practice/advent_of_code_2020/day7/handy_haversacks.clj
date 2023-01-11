@@ -1,6 +1,6 @@
 (ns clojure-practice.advent-of-code-2020.day7.handy-haversacks
   (:require [clojure.string :as str]
-            [clojure-practice.advent-of-code-2020.util :as util]))
+            [clojure-practice.util :as util]))
 
 (comment
   "
@@ -113,7 +113,7 @@
 
 (defn part1
   [input-file-path]
-  (let [bags-data (input-str->bags-data (util/read-input-file input-file-path))]
+  (let [bags-data (input-str->bags-data (util/read-file input-file-path))]
     (bags-holding-colored-bag bags-data "shiny gold")))
 
 
@@ -130,7 +130,7 @@
 
 (defn part2
   [input-file-path]
-  (let [bags-data (input-str->bags-data (util/read-input-file input-file-path))]
+  (let [bags-data (input-str->bags-data (util/read-file input-file-path))]
     (count-bags-in-a-bag bags-data "shiny gold")))
 
 

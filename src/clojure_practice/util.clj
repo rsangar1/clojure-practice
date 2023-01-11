@@ -1,6 +1,6 @@
-(ns clojure-practice.advent-of-code-2020.util)
+(ns clojure-practice.util)
 
-(defn read-input-file
+(defn read-file
   [path]
   (slurp path))
 

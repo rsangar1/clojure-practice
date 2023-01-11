@@ -1,6 +1,6 @@
 (ns clojure-practice.advent-of-code-2020.day6.custom-customs
   (:require [clojure.string :as str]
-            [clojure-practice.advent-of-code-2020.util :as util]
+            [clojure-practice.util :as util]
             [clojure.set :as set]))
 
 (comment
@@ -89,7 +89,7 @@
 
 (defn customs-groups-yes-answers
   [input-file-path]
-  (let [input (util/read-input-file input-file-path)]
+  (let [input (util/read-file input-file-path)]
     (->> (str/split input #"\n\n")
          (map str/split-lines))))
 
