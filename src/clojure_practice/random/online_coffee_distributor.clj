@@ -63,6 +63,9 @@
 ;;REPL execution block
 (comment
 
+  (sort-by-val {:a 20 :b 10 :c 5 :d 25})
+  #_=> {:c 5, :b 10, :a 20, :d 25}
+
   (register-coffee-shops! [:brewed-awakening :espresso-yourself :the-daily-grind :latte-da :pour-decisions])
   #_=> {:latte-da -2101923393,
         :brewed-awakening -1051147013,
