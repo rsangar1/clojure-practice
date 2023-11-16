@@ -47,16 +47,15 @@
 
 (defn find-coffee-shop
   [user]
-  (let [hashed-user (hash user)
-        target-copy-shop (first-matching-coffee-shop hashed-user)]
+  (let [target-copy-shop (first-matching-coffee-shop user)]
     (or target-copy-shop (key (first @coffee-shops)))))
 
 (defn first-matching-coffee-shop
-  [hashed-user]
-  (some (fn [[k v]]
-          (when (> v hashed-user) k))
-        @coffee-shops)
-  )
+  [user]
+  (some (fn [[coffe-shop hashed-coffee-shop]]
+          (when (> hashed-coffee-shop (hash user))
+            coffe-shop))
+        @coffee-shops))
 
 (comment
 
@@ -67,28 +66,23 @@
         :the-daily-grind -45846930,
         :espresso-yourself 432620008}
 
-  (register-coffee-shop! :mugshot-cafe)
-  #_=> {:latte-da -2101923393,
-        :brewed-awakening -1051147013,
-        :pour-decisions -896746113,
-        :the-daily-grind -45846930,
-        :espresso-yourself 432620008,
-        :mugshot-cafe 951306753}
-
-  (first-matching-coffee-shop (hash :joe-brewster))
+  (first-matching-coffee-shop :joe-brewster)
   #_=> :brewed-awakening
 
-  (first-matching-coffee-shop (hash :decaf-daphne))
-
-  (first-matching-coffee-shop (hash :iced-iris))
+  (first-matching-coffee-shop :decaf-daphne)
+  #_=> nil
 
   (find-coffee-shop :decaf-daphne)
+  #_=> :latte-da
 
-  (find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
-  (find-coffee-shop :decaf-daphne)   #_=> :latte-da
-  (find-coffee-shop :iced-iris)      #_=> :espresso-yourself
-  (find-coffee-shop :americano-andy) #_=> :espresso-yourself
-  (find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
+  ;(find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
+  ;(find-coffee-shop :decaf-daphne)   #_=> :latte-da
+  ;(find-coffee-shop :iced-iris)      #_=> :espresso-yourself
+  ;(find-coffee-shop :americano-andy) #_=> :espresso-yourself
+  ;(find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
+
+  (map find-coffee-shop [:joe-brewster :decaf-daphne :iced-iris :americano-andy :joe-brewster] )
+  #_=> (:brewed-awakening :latte-da :espresso-yourself :espresso-yourself :brewed-awakening)
 
   (register-coffee-shop! :mugshot-cafe)
   #_=> {:latte-da -2101923393,
@@ -98,33 +92,23 @@
         :espresso-yourself 432620008,
         :mugshot-cafe 951306753}
 
-  (find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
-  (find-coffee-shop :decaf-daphne)   #_=> :latte-da
-  (find-coffee-shop :iced-iris)      #_=> :espresso-yourself
-  (find-coffee-shop :americano-andy) #_=> :espresso-yourself
-  (find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
 
+  (map find-coffee-shop [:joe-brewster :decaf-daphne :iced-iris :americano-andy :joe-brewster] )
+  #_=> (:brewed-awakening :latte-da :espresso-yourself :espresso-yourself :brewed-awakening)
 
   (register-coffee-shop! :indian-special)
-  #_=>
-  {:latte-da -2101923393,
-   :brewed-awakening -1051147013,
-   :pour-decisions -896746113,
-   :the-daily-grind -45846930,
-   :espresso-yourself 432620008,
-   :mugshot-cafe 951306753,
-   :indian-special 1613848381}
+  #_=> {:latte-da -2101923393,
+        :brewed-awakening -1051147013,
+        :pour-decisions -896746113,
+        :the-daily-grind -45846930,
+        :espresso-yourself 432620008,
+        :mugshot-cafe 951306753,
+        :indian-special 1613848381}
 
-  (find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
-  (find-coffee-shop :decaf-daphne)   #_=> :indian-special
-  (find-coffee-shop :iced-iris)      #_=> :espresso-yourself
-  (find-coffee-shop :americano-andy) #_=> :espresso-yourself
-  (find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
+  (map find-coffee-shop [:joe-brewster :decaf-daphne :iced-iris :americano-andy :joe-brewster] )
+  #_=> (:brewed-awakening :indian-special :espresso-yourself :espresso-yourself :brewed-awakening)
+
+  (map find-coffee-shop [:joe-brewster :decaf-daphne :iced-iris :americano-andy :joe-brewster :random-user :coffee-lover] )
+  #_=> (:brewed-awakening :indian-special :espresso-yourself :espresso-yourself :brewed-awakening :indian-special :the-daily-grind)
 
   )
-
-
-
-
-
-
