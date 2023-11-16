@@ -36,7 +36,7 @@
   [shops]
   (let [coffee-shop-hash-map (zipmap shops (map hash shops))
         sorted-coffee-shop-hash-map (into {} (sort-by val coffee-shop-hash-map))]
-    (reset! coffee-shops coffee-shop-hash-map)))
+    (reset! coffee-shops sorted-coffee-shop-hash-map)))
 
 (defn register-coffee-shop!
   [shop]
@@ -48,34 +48,15 @@
 (defn find-coffee-shop
   [user]
   (let [hashed-user (hash user)
-        shop-keys (keys @coffee-shops)
-        ]))
+        target-copy-shop (first-matching-coffee-shop hashed-user)]
+    (or target-copy-shop (key (first @coffee-shops)))))
 
 (defn first-matching-coffee-shop
   [hashed-user]
   (some (fn [[k v]]
           (when (> v hashed-user) k))
-        @coffee-shops))
-
-;(defn find-coffeeshop [user]
-;  (let [hashed-user (hash-fn user)
-;        shops (seq @coffee-shops)
-;        ring (apply concat (for [[shop _] shops]
-;                             (repeat virtual-nodes-per-shop shop)))
-;        ring-sorted (sort ring)
-;        target-shop (first (drop-while #(<= hashed-user %) ring-sorted))]
-;    (or target-shop (first ring))))
-
-;(defn register-coffee-shop! [new-shop]
-;  (swap! coffee-shops assoc new-shop nil))
-
-;(defn update-coffee-shop-rings! []
-;  (let [all-shops (keys @coffee-shops)
-;        total-virtual-nodes (* virtual-nodes-per-shop (count all-shops))]
-;    (doseq [shop all-shops]
-;      (swap! coffee-shops update shop (fn [_] (range (* virtual-nodes-per-shop (hash-fn shop))
-;                                                     total-virtual-nodes
-;                                                     virtual-nodes-per-shop))))))
+        @coffee-shops)
+  )
 
 (comment
 
@@ -101,6 +82,44 @@
 
   (first-matching-coffee-shop (hash :iced-iris))
 
+  (find-coffee-shop :decaf-daphne)
+
+  (find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
+  (find-coffee-shop :decaf-daphne)   #_=> :latte-da
+  (find-coffee-shop :iced-iris)      #_=> :espresso-yourself
+  (find-coffee-shop :americano-andy) #_=> :espresso-yourself
+  (find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
+
+  (register-coffee-shop! :mugshot-cafe)
+  #_=> {:latte-da -2101923393,
+        :brewed-awakening -1051147013,
+        :pour-decisions -896746113,
+        :the-daily-grind -45846930,
+        :espresso-yourself 432620008,
+        :mugshot-cafe 951306753}
+
+  (find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
+  (find-coffee-shop :decaf-daphne)   #_=> :latte-da
+  (find-coffee-shop :iced-iris)      #_=> :espresso-yourself
+  (find-coffee-shop :americano-andy) #_=> :espresso-yourself
+  (find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
+
+
+  (register-coffee-shop! :indian-special)
+  #_=>
+  {:latte-da -2101923393,
+   :brewed-awakening -1051147013,
+   :pour-decisions -896746113,
+   :the-daily-grind -45846930,
+   :espresso-yourself 432620008,
+   :mugshot-cafe 951306753,
+   :indian-special 1613848381}
+
+  (find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
+  (find-coffee-shop :decaf-daphne)   #_=> :indian-special
+  (find-coffee-shop :iced-iris)      #_=> :espresso-yourself
+  (find-coffee-shop :americano-andy) #_=> :espresso-yourself
+  (find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
 
   )
 
