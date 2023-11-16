@@ -32,31 +32,35 @@
 
 (def coffee-shops (atom {}))
 
+(defn sort-by-val
+  [m]
+  (into {} (sort-by val m)))
+
 (defn register-coffee-shops!
   [shops]
-  (let [coffee-shop-hash-map (zipmap shops (map hash shops))
-        sorted-coffee-shop-hash-map (into {} (sort-by val coffee-shop-hash-map))]
-    (reset! coffee-shops sorted-coffee-shop-hash-map)))
+  (let [coffee-shop-map (zipmap shops (map hash shops))]
+    (reset! coffee-shops (sort-by-val coffee-shop-map))))
 
 (defn register-coffee-shop!
   [shop]
-  (let [hashed-shop (hash shop)
-        coffee-shops-with-new-shop (assoc @coffee-shops shop hashed-shop)
-        new-sorted-coffee-shops (into {} (sort-by val coffee-shops-with-new-shop))]
-    (reset! coffee-shops new-sorted-coffee-shops)))
+  (let [coffee-shops-with-new-shop (assoc @coffee-shops shop (hash shop))]
+    (reset! coffee-shops (sort-by-val coffee-shops-with-new-shop))))
+
+(defn first-matching-coffee-shop
+  [user]
+  (some (fn [[coffee-shop hashed-coffee-shop]]
+          (when (> hashed-coffee-shop (hash user))
+            coffee-shop))
+        @coffee-shops))
 
 (defn find-coffee-shop
   [user]
   (let [target-copy-shop (first-matching-coffee-shop user)]
     (or target-copy-shop (key (first @coffee-shops)))))
 
-(defn first-matching-coffee-shop
-  [user]
-  (some (fn [[coffe-shop hashed-coffee-shop]]
-          (when (> hashed-coffee-shop (hash user))
-            coffe-shop))
-        @coffee-shops))
 
+
+;;REPL execution block
 (comment
 
   (register-coffee-shops! [:brewed-awakening :espresso-yourself :the-daily-grind :latte-da :pour-decisions])
@@ -74,12 +78,6 @@
 
   (find-coffee-shop :decaf-daphne)
   #_=> :latte-da
-
-  ;(find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
-  ;(find-coffee-shop :decaf-daphne)   #_=> :latte-da
-  ;(find-coffee-shop :iced-iris)      #_=> :espresso-yourself
-  ;(find-coffee-shop :americano-andy) #_=> :espresso-yourself
-  ;(find-coffee-shop :joe-brewster)   #_=> :brewed-awakening
 
   (map find-coffee-shop [:joe-brewster :decaf-daphne :iced-iris :americano-andy :joe-brewster] )
   #_=> (:brewed-awakening :latte-da :espresso-yourself :espresso-yourself :brewed-awakening)
