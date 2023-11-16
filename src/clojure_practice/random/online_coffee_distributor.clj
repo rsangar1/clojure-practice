@@ -30,21 +30,79 @@
   the world's finest online coffee distributor."
   )
 
-(def coffee-shops (atom []))
+(def coffee-shops (atom {}))
 
-(register-coffee-shop!
-  [shop]
-  (swap! coffee-shops assoc shop))
-
-(register-coffee-shops!
+(defn register-coffee-shops!
   [shops]
-  (map register-coffee-shop shops))
+  (let [coffee-shop-hash-map (zipmap shops (map hash shops))
+        sorted-coffee-shop-hash-map (into {} (sort-by val coffee-shop-hash-map))]
+    (reset! coffee-shops coffee-shop-hash-map)))
 
-(defn find-coffee-shop [user]
-  (let [num-shops (count @coffee-shops)
-        user-hash (hash user)
-        shop-index (mod user-hash num-shops)]
-    (nth @coffee-shops shop-index)))
+(defn register-coffee-shop!
+  [shop]
+  (let [hashed-shop (hash shop)
+        coffee-shops-with-new-shop (assoc @coffee-shops shop hashed-shop)
+        new-sorted-coffee-shops (into {} (sort-by val coffee-shops-with-new-shop))]
+    (reset! coffee-shops new-sorted-coffee-shops)))
+
+(defn find-coffee-shop
+  [user]
+  (let [hashed-user (hash user)
+        shop-keys (keys @coffee-shops)
+        ]))
+
+(defn first-matching-coffee-shop
+  [hashed-user]
+  (some (fn [[k v]]
+          (when (> v hashed-user) k))
+        @coffee-shops))
+
+;(defn find-coffeeshop [user]
+;  (let [hashed-user (hash-fn user)
+;        shops (seq @coffee-shops)
+;        ring (apply concat (for [[shop _] shops]
+;                             (repeat virtual-nodes-per-shop shop)))
+;        ring-sorted (sort ring)
+;        target-shop (first (drop-while #(<= hashed-user %) ring-sorted))]
+;    (or target-shop (first ring))))
+
+;(defn register-coffee-shop! [new-shop]
+;  (swap! coffee-shops assoc new-shop nil))
+
+;(defn update-coffee-shop-rings! []
+;  (let [all-shops (keys @coffee-shops)
+;        total-virtual-nodes (* virtual-nodes-per-shop (count all-shops))]
+;    (doseq [shop all-shops]
+;      (swap! coffee-shops update shop (fn [_] (range (* virtual-nodes-per-shop (hash-fn shop))
+;                                                     total-virtual-nodes
+;                                                     virtual-nodes-per-shop))))))
+
+(comment
+
+  (register-coffee-shops! [:brewed-awakening :espresso-yourself :the-daily-grind :latte-da :pour-decisions])
+  #_=> {:latte-da -2101923393,
+        :brewed-awakening -1051147013,
+        :pour-decisions -896746113,
+        :the-daily-grind -45846930,
+        :espresso-yourself 432620008}
+
+  (register-coffee-shop! :mugshot-cafe)
+  #_=> {:latte-da -2101923393,
+        :brewed-awakening -1051147013,
+        :pour-decisions -896746113,
+        :the-daily-grind -45846930,
+        :espresso-yourself 432620008,
+        :mugshot-cafe 951306753}
+
+  (first-matching-coffee-shop (hash :joe-brewster))
+  #_=> :brewed-awakening
+
+  (first-matching-coffee-shop (hash :decaf-daphne))
+
+  (first-matching-coffee-shop (hash :iced-iris))
+
+
+  )
 
 
 
